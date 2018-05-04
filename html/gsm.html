@@ -1,0 +1,1277 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gsm package &mdash; Central Server Documentation 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Central Server Documentation 1.0 documentation" href="index.html"/>
+        <link rel="next" title="gsm.modem package" href="gsm.modem.html"/>
+        <link rel="prev" title="dynadb package" href="dynadb.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Central Server Documentation
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="dynadb.html">dynadb package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">gsm package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gsm.modem.html">gsm.modem package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsm.smsparser2.html">gsm.smsparser2 package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.alertgenexec">gsm.alertgenexec module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.alertmessaging">gsm.alertmessaging module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.dbmirror">gsm.dbmirror module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gsm-dlhealth-module">gsm.dlhealth module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.gsmserver">gsm.gsmserver module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.lockscript">gsm.lockscript module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.perfmon">gsm.perfmon module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gsm-readfromsdcarddata-module">gsm.readfromsdcarddata module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.smsparser">gsm.smsparser module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.smstables">gsm.smstables module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.somsparser">gsm.somsparser module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.surficialparser">gsm.surficialparser module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.test_msg">gsm.test_msg module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.tester">gsm.tester module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-gsm.utsparser">gsm.utsparser module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="volatile.html">volatile package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Central Server Documentation</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>gsm package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/gsm.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="gsm-package">
+<h1>gsm package<a class="headerlink" href="#gsm-package" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="gsm.modem.html">gsm.modem package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gsm.modem.html#gsm-modem-gsmtest-module">gsm.modem.gsmtest module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsm.modem.html#module-gsm.modem.modem">gsm.modem.modem module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gsm.smsparser2.html">gsm.smsparser2 package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gsm.smsparser2.html#module-gsm.smsparser2.earthquake">gsm.smsparser2.earthquake module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsm.smsparser2.html#module-gsm.smsparser2.rain">gsm.smsparser2.rain module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsm.smsparser2.html#module-gsm.smsparser2.smsclass">gsm.smsparser2.smsclass module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsm.smsparser2.html#module-gsm.smsparser2.subsurface">gsm.smsparser2.subsurface module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-gsm.alertgenexec">
+<span id="gsm-alertgenexec-module"></span><h2>gsm.alertgenexec module<a class="headerlink" href="#module-gsm.alertgenexec" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gsm.alertgenexec.count_alert_analysis_instances">
+<code class="descclassname">gsm.alertgenexec.</code><code class="descname">count_alert_analysis_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertgenexec.html#count_alert_analysis_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertgenexec.count_alert_analysis_instances" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertgenexec.main">
+<code class="descclassname">gsm.alertgenexec.</code><code class="descname">main</code><span class="sig-paren">(</span><em>mc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertgenexec.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertgenexec.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-gsm.alertmessaging">
+<span id="gsm-alertmessaging-module"></span><h2>gsm.alertmessaging module<a class="headerlink" href="#module-gsm.alertmessaging" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gsm.alertmessaging.get_alert_staff_numbers">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">get_alert_staff_numbers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#get_alert_staff_numbers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.get_alert_staff_numbers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.monitoring_start">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">monitoring_start</code><span class="sig-paren">(</span><em>site_id</em>, <em>ts_last_retrigger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#monitoring_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.monitoring_start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.rainfall_details">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">rainfall_details</code><span class="sig-paren">(</span><em>site_id</em>, <em>start_monitor</em>, <em>ts_last_retrigger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#rainfall_details"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.rainfall_details" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.subsurface_details">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">subsurface_details</code><span class="sig-paren">(</span><em>site_id</em>, <em>start_monitor</em>, <em>ts_last_retrigger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#subsurface_details"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.subsurface_details" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.tsm_details">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">tsm_details</code><span class="sig-paren">(</span><em>df</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#tsm_details"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.tsm_details" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.surficial_details">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">surficial_details</code><span class="sig-paren">(</span><em>site_id</em>, <em>start_monitor</em>, <em>ts_last_retrigger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#surficial_details"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.surficial_details" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.alert_details">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">alert_details</code><span class="sig-paren">(</span><em>site_id</em>, <em>trigger_source</em>, <em>ts_last_retrigger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#alert_details"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.alert_details" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.send_alert_message">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">send_alert_message</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#send_alert_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.send_alert_message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.check_alerts">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">check_alerts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#check_alerts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.check_alerts" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.get_name_of_staff">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">get_name_of_staff</code><span class="sig-paren">(</span><em>number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#get_name_of_staff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.get_name_of_staff" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.process_ack_to_alert">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">process_ack_to_alert</code><span class="sig-paren">(</span><em>sms</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#process_ack_to_alert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.process_ack_to_alert" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.update_shift_tags">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">update_shift_tags</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#update_shift_tags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.update_shift_tags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.alertmessaging.main">
+<code class="descclassname">gsm.alertmessaging.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/alertmessaging.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.alertmessaging.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-gsm.dbmirror">
+<span id="gsm-dbmirror-module"></span><h2>gsm.dbmirror module<a class="headerlink" href="#module-gsm.dbmirror" title="Permalink to this headline">¶</a></h2>
+<p>Mirroring Data from dyna to sanbox and sandbox to dyna.</p>
+<dl class="function">
+<dt id="gsm.dbmirror.get_arguments">
+<code class="descclassname">gsm.dbmirror.</code><code class="descname">get_arguments</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/dbmirror.html#get_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.dbmirror.get_arguments" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The get arguments is a function that checks the argument that being sent from main function and returns the
+arguement of the function.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Outputs mode of action from running python <strong>1</strong> (<em>dyna to sandbox</em>) and <strong>2</strong> (<em>sandbox to dyna</em>).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)">int</a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For mode 2 it also return <strong>users or loggers</strong> for sanbox to dyna.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.dbmirror.dyna_to_sandbox">
+<code class="descclassname">gsm.dbmirror.</code><code class="descname">dyna_to_sandbox</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/dbmirror.html#dyna_to_sandbox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.dbmirror.dyna_to_sandbox" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of dyna to sandbox is a function that process the exporting of data from dyna and importing data to sandbox by
+loading  the data from XML.</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.dbmirror.get_max_index_from_table">
+<code class="descclassname">gsm.dbmirror.</code><code class="descname">get_max_index_from_table</code><span class="sig-paren">(</span><em>table_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/dbmirror.html#get_max_index_from_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.dbmirror.get_max_index_from_table" title="Permalink to this definition">¶</a></dt>
+<dd><ul>
+<li><p class="first">The process getting of  max index from table is a function that get the max index of the smsinbox.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param table:</th><td class="field-body">Name of the table for smsinbox</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type table:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Index id of the not yet copied data in dyna.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.dbmirror.get_last_copied_index">
+<code class="descclassname">gsm.dbmirror.</code><code class="descname">get_last_copied_index</code><span class="sig-paren">(</span><em>table_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/dbmirror.html#get_last_copied_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.dbmirror.get_last_copied_index" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of getting last copied index is a  function that reads the
+value of the index inside the user_inbox_index.tmp.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Outputs index id that stored from the user_inbox_index.tmp.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.dbmirror.import_sql_file_to_dyna">
+<code class="descclassname">gsm.dbmirror.</code><code class="descname">import_sql_file_to_dyna</code><span class="sig-paren">(</span><em>table</em>, <em>max_inbox_id</em>, <em>max_index_last_copied</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/dbmirror.html#import_sql_file_to_dyna"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.dbmirror.import_sql_file_to_dyna" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of importing sql file to dyna is a function that process the exporting of data from sanbox and importing data to dyna smsibox2.</li>
+</ul>
+<p>This function also change the value of the index in user_inbox_index.tmp.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>table</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Name of the table for smsinbox</li>
+<li><strong>max_inbox_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – Index id of the not yet copied data in dyna</li>
+<li><strong>max_index_last_copied</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – Index id that stored from the user_inbox_index.tmp</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.dbmirror.sandbox_to_dyna">
+<code class="descclassname">gsm.dbmirror.</code><code class="descname">sandbox_to_dyna</code><span class="sig-paren">(</span><em>table_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/dbmirror.html#sandbox_to_dyna"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.dbmirror.sandbox_to_dyna" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of sandbox to dyna is a function that process the mirroring data of sandbox to dyna by comparing</li>
+</ul>
+<p>the max index of  the not yet copied data from dyna and the last copied index
+from dyna.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.dbmirror.main">
+<code class="descclassname">gsm.dbmirror.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/dbmirror.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.dbmirror.main" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The main is a function that runs the whole dbmirror with the logic of
+checking if the dbmirror must run the dyna to sandbox
+or the sandbox to dyna for mirroring the data.</li>
+</ul>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<ol class="last arabic simple">
+<li>To run the script <strong>open</strong> a terminal or bash</li>
+<li>Set your terminal/bash path to <strong>/centraserver/gsm/</strong></li>
+<li>Type inside the terminal/bash  <strong>python dbmirror.py -m1</strong> for dyna
+to sandbox and <strong>python dbmirror.py -m2 -t users/loggers</strong> for sanbox
+to dyna.</li>
+<li>Click Enter</li>
+</ol>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="gsm-dlhealth-module">
+<h2>gsm.dlhealth module<a class="headerlink" href="#gsm-dlhealth-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-gsm.gsmserver">
+<span id="gsm-gsmserver-module"></span><h2>gsm.gsmserver module<a class="headerlink" href="#module-gsm.gsmserver" title="Permalink to this headline">¶</a></h2>
+<p>Running mainserver scripts</p>
+<dl class="function">
+<dt id="gsm.gsmserver.check_id_in_table">
+<code class="descclassname">gsm.gsmserver.</code><code class="descname">check_id_in_table</code><span class="sig-paren">(</span><em>table</em>, <em>gsm_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/gsmserver.html#check_id_in_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.gsmserver.check_id_in_table" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of selecting data from user or logger mobile with mobile id.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>table</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – table name of the gsm_id.</li>
+<li><strong>gsm_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – gsm_id of the recipient.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">recipient number (<em>int</em>)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">obj</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.gsmserver.log_runtime_status">
+<code class="descclassname">gsm.gsmserver.</code><code class="descname">log_runtime_status</code><span class="sig-paren">(</span><em>script_name</em>, <em>status</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/gsmserver.html#log_runtime_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.gsmserver.log_runtime_status" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of logging runtime status is a function that log the runtime of script if  alive or not.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>script_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Script file name.</li>
+<li><strong>status</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – script runtime status.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.gsmserver.get_allowed_prefixes">
+<code class="descclassname">gsm.gsmserver.</code><code class="descname">get_allowed_prefixes</code><span class="sig-paren">(</span><em>network</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/gsmserver.html#get_allowed_prefixes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.gsmserver.get_allowed_prefixes" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of checking network prefixes extensions in the volatile.memory funtion server_config.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>netwok</strong> – Table name (users and loggers) and <strong>Default</strong> to <strong>users</strong> table .</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Outputs the number with extended 639 or 09 in the number.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.gsmserver.send_messages_from_db">
+<code class="descclassname">gsm.gsmserver.</code><code class="descname">send_messages_from_db</code><span class="sig-paren">(</span><em>gsm=None</em>, <em>table='users'</em>, <em>send_status=0</em>, <em>gsm_info=None</em>, <em>limit=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/gsmserver.html#send_messages_from_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.gsmserver.send_messages_from_db" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process getting all message unset and try to send the message again.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>table</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Table name and <strong>Default</strong> to <strong>users</strong> table .</li>
+<li><strong>send_status</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – the id number of the gsm message status and  <strong>Default</strong> to <strong>0</strong>.</li>
+<li><strong>gsm_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – The id of the gsm that is use globe (2,4) and smart (3,5) and <strong>Default</strong> to <strong>0</strong>.</li>
+<li><strong>limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – The limit of message to get in the table and <strong>Default</strong> to <strong>10</strong>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.gsmserver.try_sending_messages">
+<code class="descclassname">gsm.gsmserver.</code><code class="descname">try_sending_messages</code><span class="sig-paren">(</span><em>gsm</em>, <em>gsm_info</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/gsmserver.html#try_sending_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.gsmserver.try_sending_messages" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of resending messages that have read_status <strong>1 to 5</strong> for smsinbox_(<strong>loggers or users</strong>).</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gsm_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – gsm_id of 4 (globe) and 5 (smart).</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.gsmserver.simulate_gsm">
+<code class="descclassname">gsm.gsmserver.</code><code class="descname">simulate_gsm</code><span class="sig-paren">(</span><em>network='simulate'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/gsmserver.html#simulate_gsm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.gsmserver.simulate_gsm" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process simulate is a function that runs a gsm simulation of insert,update and check status of gsm.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>network</strong> – gsm network and <strong>Default</strong> to <strong>simulate</strong>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.gsmserver.log_csq">
+<code class="descclassname">gsm.gsmserver.</code><code class="descname">log_csq</code><span class="sig-paren">(</span><em>gsm</em>, <em>gsm_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/gsmserver.html#log_csq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.gsmserver.log_csq" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process that logs the gsm signal of the gsm id .</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gsm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)"><em>list</em></a>) – List data of gsm.</li>
+<li><strong>gsm_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – Id of the gsm in the database table.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Signal value of gsm module.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)">int</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.gsmserver.run_server">
+<code class="descclassname">gsm.gsmserver.</code><code class="descname">run_server</code><span class="sig-paren">(</span><em>gsm_info</em>, <em>table='loggers'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/gsmserver.html#run_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.gsmserver.run_server" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of running the gsm server to read the recieved message and to try to
+send message from outbox.It checks gsm info <strong>(name, network, id)</strong> to read messages
+from inbox and outbox of the table.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>gsm_info</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – id of the gsm server.</li>
+<li><strong>table</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – table name to use and <strong>Default</strong> to <strong>loggers</strong></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.gsmserver.get_arguments">
+<code class="descclassname">gsm.gsmserver.</code><code class="descname">get_arguments</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/gsmserver.html#get_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.gsmserver.get_arguments" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process that checks the argument that being sent from main function and returns the arguement list of function.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Dictionary out of mode of action from running python when it reads the following.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.6)">dict</a></td>
+</tr>
+</tbody>
+</table>
+<p>Example Output:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">table</span>
+    <span class="n">loggers</span> <span class="c1"># Smsinbox table (loggers or users)</span>
+<span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">network</span>
+    <span class="n">smart</span>  <span class="c1"># Network name ( smart/globe/simulate )</span>
+<span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">gsm_id</span>
+    <span class="mi">1</span> <span class="c1"># GSM id ( 1, 2 ,3... )</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.gsmserver.get_gsm_modules">
+<code class="descclassname">gsm.gsmserver.</code><code class="descname">get_gsm_modules</code><span class="sig-paren">(</span><em>reset_val=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/gsmserver.html#get_gsm_modules"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.gsmserver.get_gsm_modules" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of  getting the gsm modules information.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>reset_val</strong> – Trigger value to check the gsm information and <strong>Default</strong> to <strong>False</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Gsm info output for success processing.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">obj</td>
+</tr>
+</tbody>
+</table>
+<p>Example Output:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="s1">&#39;globe&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="s1">&#39;dummy&#39;</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="s1">&#39;639171234567&#39;</span><span class="p">,</span>
+<span class="s1">&#39;pwr_on_pin&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;ring_pin&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;simulate&#39;</span><span class="p">},</span> <span class="mi">2</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;network&#39;</span><span class="p">:</span>
+<span class="s1">&#39;globe&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="s1">&#39;639176321023&#39;</span><span class="p">,</span> <span class="s1">&#39;pwr_on_pin&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="s1">&#39;ring_pin&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;globe&#39;</span><span class="p">},</span> <span class="mi">3</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="s1">&#39;smart&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+<span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="s1">&#39;639988448687&#39;</span><span class="p">,</span> <span class="s1">&#39;pwr_on_pin&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ring_pin&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+<span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;smart&#39;</span><span class="p">},</span> <span class="mi">4</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="s1">&#39;globe&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="s1">&#39;/dev/globeport&#39;</span><span class="p">,</span>
+<span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="s1">&#39;639175388301&#39;</span><span class="p">,</span> <span class="s1">&#39;pwr_on_pin&#39;</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span> <span class="s1">&#39;ring_pin&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+<span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;globe1&#39;</span><span class="p">},</span> <span class="mi">5</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="s1">&#39;smart&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="s1">&#39;/dev/smartport&#39;</span><span class="p">,</span>
+<span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="s1">&#39;639088125640&#39;</span><span class="p">,</span> <span class="s1">&#39;pwr_on_pin&#39;</span><span class="p">:</span> <span class="mi">31</span><span class="p">,</span> <span class="s1">&#39;ring_pin&#39;</span><span class="p">:</span> <span class="mi">33</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;smart1&#39;</span><span class="p">},</span>
+<span class="mi">6</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="s1">&#39;globe&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="s1">&#39;/dev/smartport&#39;</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="s1">&#39;639175963573&#39;</span><span class="p">,</span>
+<span class="s1">&#39;pwr_on_pin&#39;</span><span class="p">:</span> <span class="mi">31</span><span class="p">,</span> <span class="s1">&#39;ring_pin&#39;</span><span class="p">:</span> <span class="mi">33</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;globe2&#39;</span><span class="p">},</span> <span class="mi">7</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="s1">&#39;smart&#39;</span><span class="p">,</span>
+<span class="s1">&#39;module&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="s1">&#39;/dev/ttyUSB1&#39;</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="s1">&#39;639088125638&#39;</span><span class="p">,</span> <span class="s1">&#39;pwr_on_pin&#39;</span><span class="p">:</span> <span class="mi">29</span><span class="p">,</span>
+<span class="s1">&#39;ring_pin&#39;</span><span class="p">:</span> <span class="mi">33</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;smart1&#39;</span><span class="p">}}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.gsmserver.main">
+<code class="descclassname">gsm.gsmserver.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/gsmserver.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.gsmserver.main" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of running the whole gsmserver by checking if the gsmserver arguement is being initialize as gsm_id, table or network with respective agruement id.</li>
+</ul>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<ol class="last arabic simple">
+<li>To run the script <strong>open</strong> a terminal or bash</li>
+<li>Set your terminal/bash path to <strong>/centraserver/gsm/</strong> .</li>
+<li>Type inside the terminal/bash  “”<strong>python gsmserver.py</strong> <strong>-g</strong>
+<em>&lt;gsm id (1,2,3…)&gt;</em> <strong>-t</strong> <em>&lt;smsinbox table (loggers or users)&gt;</em>
+<strong>-n</strong> <em>&lt;network name (smart/globe/simulate)&gt;</em> “”.</li>
+<li>Click Enter</li>
+</ol>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-gsm.lockscript">
+<span id="gsm-lockscript-module"></span><h2>gsm.lockscript module<a class="headerlink" href="#module-gsm.lockscript" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gsm.lockscript.get_lock">
+<code class="descclassname">gsm.lockscript.</code><code class="descname">get_lock</code><span class="sig-paren">(</span><em>process_name</em>, <em>exitifexist=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/lockscript.html#get_lock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.lockscript.get_lock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-gsm.perfmon">
+<span id="gsm-perfmon-module"></span><h2>gsm.perfmon module<a class="headerlink" href="#module-gsm.perfmon" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gsm.perfmon.count_items">
+<code class="descclassname">gsm.perfmon.</code><code class="descname">count_items</code><span class="sig-paren">(</span><em>ts_end=None</em>, <em>ts_start=None</em>, <em>table=None</em>, <em>stat_col=None</em>, <em>stat=None</em>, <em>pq=False</em>, <em>write_to_db=False</em>, <em>timelag=5</em>, <em>backtrack=5000</em>, <em>dbinstance='local'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/perfmon.html#count_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.perfmon.count_items" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.perfmon.get_arguments">
+<code class="descclassname">gsm.perfmon.</code><code class="descname">get_arguments</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/perfmon.html#get_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.perfmon.get_arguments" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.perfmon.main">
+<code class="descclassname">gsm.perfmon.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/perfmon.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.perfmon.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="gsm-readfromsdcarddata-module">
+<h2>gsm.readfromsdcarddata module<a class="headerlink" href="#gsm-readfromsdcarddata-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-gsm.smsparser">
+<span id="gsm-smsparser-module"></span><h2>gsm.smsparser module<a class="headerlink" href="#module-gsm.smsparser" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gsm.smsparser.logger_response">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">logger_response</code><span class="sig-paren">(</span><em>sms</em>, <em>log_type</em>, <em>log='False'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#logger_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.logger_response" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of logging the id of the match expression on table logger_respose.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em>, </em><em>Default</em><em>(</em><a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.6)"><em>False</em></a><em>)</em>) – list data info of sms message .</li>
+<li><strong>Log_type</strong> – list data info of sms message .</li>
+<li><strong>Log</strong> – Switch on or off the logging of the response.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.common_logger_sms">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">common_logger_sms</code><span class="sig-paren">(</span><em>sms</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#common_logger_sms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.common_logger_sms" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>Check sms message if matches to the regular expression.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)"><em>list</em></a>) – list data info of sms message .</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Outputs the id value number of the match regular expression and Return False if not.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.update_last_msg_received_table">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">update_last_msg_received_table</code><span class="sig-paren">(</span><em>txtdatetime</em>, <em>name</em>, <em>sim_num</em>, <em>msg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#update_last_msg_received_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.update_last_msg_received_table" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>Update recieved message from the last_msg_recived table.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>txtdatetime</strong> (<em>date</em>) – list data info of sms message .</li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – list data info of sms message .</li>
+<li><strong>sim_num</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – list data info of sms message .</li>
+<li><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – list data info of sms message .</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.process_piezometer">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">process_piezometer</code><span class="sig-paren">(</span><em>sms</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#process_piezometer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.process_piezometer" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of parsing  process_piezometer data.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)"><em>list</em></a>) – list data info of sms message .</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>True output for success parsing and return</dt>
+<dd>False if fails.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.check_logger_model">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">check_logger_model</code><span class="sig-paren">(</span><em>logger_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#check_logger_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.check_logger_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.spawn_alert_gen">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">spawn_alert_gen</code><span class="sig-paren">(</span><em>tsm_name</em>, <em>timestamp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#spawn_alert_gen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.spawn_alert_gen" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of sending data to alert generator for loggers and users.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tsm_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of logger or user .</li>
+<li><strong>timestamp</strong> (<em>date</em>) – Data timestamp of message .</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.process_surficial_observation">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">process_surficial_observation</code><span class="sig-paren">(</span><em>sms</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#process_surficial_observation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.process_surficial_observation" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>Process the sms message that fits for surficial observation and save paserse message to database.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)"><em>list</em></a>) – list data info of sms message .</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True output for success process and return</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool<p>False if fails.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.check_number_in_users">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">check_number_in_users</code><span class="sig-paren">(</span><em>num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#check_number_in_users"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.check_number_in_users" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.parse_all_messages">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">parse_all_messages</code><span class="sig-paren">(</span><em>args</em>, <em>allmsgs=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#parse_all_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.parse_all_messages" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>Processing all messages that came from smsinbox_(loggers/users) and select parsing method dependent to sms message .</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> (<em>obj</em>) – arguement list of modes and criteria of sms message.</li>
+<li><strong>allmsgs</strong> (<em>obj</em>) – list of all messages that being selected from loggers and users table.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True output for success parsing and return</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><p>bool</p>
+<p>False if fails.</p>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.get_router_ids">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">get_router_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#get_router_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.get_router_ids" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of selecting router id from loggers table</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameter:</th><td class="field-body">N/A</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of keys and values from model_id table;</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">obj</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.process_gateway_msg">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">process_gateway_msg</code><span class="sig-paren">(</span><em>sms</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#process_gateway_msg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.process_gateway_msg" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>The process of processing the gateway message parser for sms data and save data to database.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sms</strong> – list data info of sms message .</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True output for success parsing and return</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool<p>False if fails.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.get_arguments">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">get_arguments</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#get_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.get_arguments" title="Permalink to this definition">¶</a></dt>
+<dd><p>-The function that checks the argument that being sent from main function and returns the
+arguement of the function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Mode of action from running python <strong>-db,-ns,-b,-r,-l,-s,-g,-m,-t</strong>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.6)">dict</a></td>
+</tr>
+</tbody>
+</table>
+<p>Example Output:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">dbhost</span>
+  <span class="n">gsm2</span> <span class="c1">#Database host it can be (local or gsm2)</span>
+<span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">table</span>
+  <span class="n">loggers</span> <span class="c1">#Smsinbox table (loggers or users)</span>
+<span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">mode</span>
+   <span class="c1">#Mode id</span>
+<span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">gsm</span>
+   <span class="n">globe</span> <span class="c1">#GSM name (globe1, smart1, globe2, smart2)*</span>
+<span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">status</span><span class="o">**</span>
+   <span class="mi">2</span> <span class="c1">#GSM status of inbox/outbox#</span>
+<span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">messagelimit</span><span class="o">**</span>
+   <span class="mi">5000</span> <span class="c1">#Number of message to read in the process</span>
+<span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">runtest</span><span class="o">**</span>
+   <span class="c1">#Default value False. Set True when running a test in the process</span>
+<span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">bypasslock</span><span class="o">**</span>
+   <span class="c1">#Default value False</span>
+<span class="o">&gt;&gt;</span> <span class="nb">print</span> <span class="n">args</span><span class="o">.</span><span class="n">nospawn</span>
+   <span class="c1">#Default value False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smsparser.main">
+<code class="descclassname">gsm.smsparser.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smsparser.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smsparser.main" title="Permalink to this definition">¶</a></dt>
+<dd><ul>
+<li><p class="first">The process of running the whole smsparser with the logic of parsing sms txt of users and loggers.</p>
+<blockquote>
+<div><p><strong>-db</strong>
+-<em>Database host it can be (local or gsm2)</em></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example Output:</th><td class="field-body"><em>gsm2</em></td>
+</tr>
+</tbody>
+</table>
+<p><strong>-t</strong>
+-<em>Smsinbox table (loggers or users)</em></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example Output:</th><td class="field-body"><em>loggers</em></td>
+</tr>
+</tbody>
+</table>
+<p><strong>-m</strong>
+-<em>Mode id</em>
+<strong>-g</strong>
+-<em>GSM name (globe1, smart1, globe2, smart2)</em>
+<strong>-s</strong>
+-<em>GSM status of inbox/outbox</em>
+<strong>-l</strong>
+-<em>Number of message to read in the process</em>
+<strong>-r</strong>
+-<em>Default value False. Set True when running a test in the process</em>
+<strong>-b</strong>
+-<em>Default value False.</em>
+<strong>-ns</strong>
+-<em>Default value False.</em></p>
+</div></blockquote>
+</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To run in terminal <strong>python smsparser.py ** with arguments (</strong> -db,-ns,-b,-r,-l,-s,-g,-m,-t**).</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-gsm.smstables">
+<span id="gsm-smstables-module"></span><h2>gsm.smstables module<a class="headerlink" href="#module-gsm.smstables" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gsm.smstables.check_number_in_table">
+<code class="descclassname">gsm.smstables.</code><code class="descname">check_number_in_table</code><span class="sig-paren">(</span><em>num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smstables.html#check_number_in_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smstables.check_number_in_table" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt><strong>Description:</strong></dt>
+<dd><ul class="first last simple">
+<li>Checks if the cellphone number exists in users or loggers table.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>num</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – number of the recipient.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">table name <strong>users</strong> or <strong>loggers</strong> (<em>int</em>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smstables.set_read_status">
+<code class="descclassname">gsm.smstables.</code><code class="descname">set_read_status</code><span class="sig-paren">(</span><em>sms_id_list</em>, <em>read_status=0</em>, <em>table=''</em>, <em>host='local'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smstables.html#set_read_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smstables.set_read_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.smstables.set_send_status">
+<code class="descclassname">gsm.smstables.</code><code class="descname">set_send_status</code><span class="sig-paren">(</span><em>table</em>, <em>status_list</em>, <em>host</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smstables.html#set_send_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smstables.set_send_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.smstables.get_inbox">
+<code class="descclassname">gsm.smstables.</code><code class="descname">get_inbox</code><span class="sig-paren">(</span><em>host='local'</em>, <em>read_status=0</em>, <em>table='loggers'</em>, <em>limit=200</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smstables.html#get_inbox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smstables.get_inbox" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.smstables.get_all_outbox_sms_from_db">
+<code class="descclassname">gsm.smstables.</code><code class="descname">get_all_outbox_sms_from_db</code><span class="sig-paren">(</span><em>table='users'</em>, <em>send_status=5</em>, <em>gsm_id=5</em>, <em>limit=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smstables.html#get_all_outbox_sms_from_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smstables.get_all_outbox_sms_from_db" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt><strong>Description:</strong></dt>
+<dd>-The function that get all outbox message that are not yet send.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>table</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Table name and <strong>Default</strong> to <strong>users</strong> table .</li>
+<li><strong>send_status</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – <strong>Default</strong> to <strong>5</strong>.</li>
+<li><strong>gsm_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – <strong>Default</strong> to <strong>5</strong>.</li>
+<li><strong>limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – <strong>Default</strong> to <strong>10</strong>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">List of message</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smstables.write_inbox">
+<code class="descclassname">gsm.smstables.</code><code class="descname">write_inbox</code><span class="sig-paren">(</span><em>msglist</em>, <em>gsm_info</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smstables.html#write_inbox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smstables.write_inbox" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt><strong>Description:</strong></dt>
+<dd>-The write raw sms to database function that write raw  message in database.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>msglist</strong> (<em>obj</em>) – The message list.</li>
+<li><strong>gsm_info</strong> (<em>obj</em>) – The gsm_info that being use.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">N/A</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.smstables.write_outbox">
+<code class="descclassname">gsm.smstables.</code><code class="descname">write_outbox</code><span class="sig-paren">(</span><em>message=None</em>, <em>recipients=None</em>, <em>gsm_id=None</em>, <em>table=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/smstables.html#write_outbox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.smstables.write_outbox" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt><strong>Description:</strong></dt>
+<dd>-The write outbox message to database is a function that insert message to smsoutbox with
+timestamp written,message source and mobile id.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>message</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – The message that will be sent to the recipients.</li>
+<li><strong>recipients</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – The number of the recipients.</li>
+<li><strong>gsm_id</strong> – The gsm id .</li>
+<li><strong>table</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – table use of the number.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">N/A</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-gsm.somsparser">
+<span id="gsm-somsparser-module"></span><h2>gsm.somsparser module<a class="headerlink" href="#module-gsm.somsparser" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Jan 18 10:07:29 2016</p>
+<p>&#64;author: SENSLOPEY</p>
+<dl class="function">
+<dt id="gsm.somsparser.log_errors">
+<code class="descclassname">gsm.somsparser.</code><code class="descname">log_errors</code><span class="sig-paren">(</span><em>errortype</em>, <em>line</em>, <em>dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/somsparser.html#log_errors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.somsparser.log_errors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.somsparser.soms_parser">
+<code class="descclassname">gsm.somsparser.</code><code class="descname">soms_parser</code><span class="sig-paren">(</span><em>msgline</em>, <em>mode</em>, <em>div</em>, <em>err</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/somsparser.html#soms_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.somsparser.soms_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-gsm.surficialparser">
+<span id="gsm-surficialparser-module"></span><h2>gsm.surficialparser module<a class="headerlink" href="#module-gsm.surficialparser" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="gsm.surficialparser.SurficialParserError">
+<em class="property">exception </em><code class="descclassname">gsm.surficialparser.</code><code class="descname">SurficialParserError</code><a class="reference internal" href="_modules/gsm/surficialparser.html#SurficialParserError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.surficialparser.SurficialParserError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+<dl class="attribute">
+<dt id="gsm.surficialparser.SurficialParserError.args">
+<code class="descname">args</code><a class="headerlink" href="#gsm.surficialparser.SurficialParserError.args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="gsm.surficialparser.SurficialParserError.message">
+<code class="descname">message</code><a class="headerlink" href="#gsm.surficialparser.SurficialParserError.message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gsm.surficialparser.parse_surficial_text">
+<code class="descclassname">gsm.surficialparser.</code><code class="descname">parse_surficial_text</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/surficialparser.html#parse_surficial_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.surficialparser.parse_surficial_text" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.surficialparser.get_time_from_sms">
+<code class="descclassname">gsm.surficialparser.</code><code class="descname">get_time_from_sms</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/surficialparser.html#get_time_from_sms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.surficialparser.get_time_from_sms" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.surficialparser.adjust_site_code">
+<code class="descclassname">gsm.surficialparser.</code><code class="descname">adjust_site_code</code><span class="sig-paren">(</span><em>site_code</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/surficialparser.html#adjust_site_code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.surficialparser.adjust_site_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.surficialparser.get_date_from_sms">
+<code class="descclassname">gsm.surficialparser.</code><code class="descname">get_date_from_sms</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/surficialparser.html#get_date_from_sms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.surficialparser.get_date_from_sms" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.surficialparser.get_site_id">
+<code class="descclassname">gsm.surficialparser.</code><code class="descname">get_site_id</code><span class="sig-paren">(</span><em>site_code</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/surficialparser.html#get_site_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.surficialparser.get_site_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.surficialparser.get_marker_id">
+<code class="descclassname">gsm.surficialparser.</code><code class="descname">get_marker_id</code><span class="sig-paren">(</span><em>site_id</em>, <em>marker_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/surficialparser.html#get_marker_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.surficialparser.get_marker_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.surficialparser.insert_new_markers">
+<code class="descclassname">gsm.surficialparser.</code><code class="descname">insert_new_markers</code><span class="sig-paren">(</span><em>site_id</em>, <em>marker_name</em>, <em>ts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/surficialparser.html#insert_new_markers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.surficialparser.insert_new_markers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.surficialparser.update_surficial_observations">
+<code class="descclassname">gsm.surficialparser.</code><code class="descname">update_surficial_observations</code><span class="sig-paren">(</span><em>obv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/surficialparser.html#update_surficial_observations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.surficialparser.update_surficial_observations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.surficialparser.update_surficial_data">
+<code class="descclassname">gsm.surficialparser.</code><code class="descname">update_surficial_data</code><span class="sig-paren">(</span><em>obv</em>, <em>mo_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/surficialparser.html#update_surficial_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.surficialparser.update_surficial_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-gsm.test_msg">
+<span id="gsm-test-msg-module"></span><h2>gsm.test_msg module<a class="headerlink" href="#module-gsm.test_msg" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-gsm.tester">
+<span id="gsm-tester-module"></span><h2>gsm.tester module<a class="headerlink" href="#module-gsm.tester" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gsm.tester.get_arguments">
+<code class="descclassname">gsm.tester.</code><code class="descname">get_arguments</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/tester.html#get_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.tester.get_arguments" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.tester.check_count">
+<code class="descclassname">gsm.tester.</code><code class="descname">check_count</code><span class="sig-paren">(</span><em>table='loggers'</em>, <em>read_status='0'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/tester.html#check_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.tester.check_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.tester.main">
+<code class="descclassname">gsm.tester.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/tester.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.tester.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-gsm.utsparser">
+<span id="gsm-utsparser-module"></span><h2>gsm.utsparser module<a class="headerlink" href="#module-gsm.utsparser" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gsm.utsparser.get_extensometer_id">
+<code class="descclassname">gsm.utsparser.</code><code class="descname">get_extensometer_id</code><span class="sig-paren">(</span><em>uts_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/utsparser.html#get_extensometer_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.utsparser.get_extensometer_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gsm.utsparser.parse_extensometer_uts">
+<code class="descclassname">gsm.utsparser.</code><code class="descname">parse_extensometer_uts</code><span class="sig-paren">(</span><em>sms</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gsm/utsparser.html#parse_extensometer_uts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gsm.utsparser.parse_extensometer_uts" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="gsm.modem.html" class="btn btn-neutral float-right" title="gsm.modem package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dynadb.html" class="btn btn-neutral" title="dynadb package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

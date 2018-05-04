@@ -1,0 +1,458 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gsm.dbmirror &mdash; Central Server Documentation 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Central Server Documentation 1.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Central Server Documentation
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dynadb.html">dynadb package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gsm.html">gsm package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../volatile.html">volatile package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Central Server Documentation</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>gsm.dbmirror</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gsm.dbmirror</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; Mirroring Data from dyna to sanbox and sandbox to dyna.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">MySQLdb</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">memcache</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">volatile.memory</span> <span class="k">as</span> <span class="nn">mem</span>
+
+<div class="viewcode-block" id="get_arguments"><a class="viewcode-back" href="../../gsm.html#gsm.dbmirror.get_arguments">[docs]</a><span class="k">def</span> <span class="nf">get_arguments</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The get arguments is a function that checks the argument that being sent from main function and returns the</span>
+<span class="sd">      arguement of the function.</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        int: Outputs mode of action from running python **1** (*dyna to sandbox*) and **2** (*sandbox to dyna*).</span>
+<span class="sd">    </span>
+<span class="sd">    .. note:: For mode 2 it also return **users or loggers** for sanbox to dyna.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;copy items from different&quot;</span>
+     <span class="s2">&quot;inboxes [-options]&quot;</span><span class="p">))</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;--mode&quot;</span><span class="p">,</span> <span class="nb">type</span> <span class="o">=</span> <span class="nb">int</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;mode&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="s2">&quot;--execute&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;execute&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+        <span class="c1"># if args.status == None:</span>
+        <span class="c1">#     args.status = 0</span>
+        <span class="c1"># if args.messagelimit == None:</span>
+        <span class="c1">#     args.messagelimit = 200</span>
+        <span class="k">return</span> <span class="n">args</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Error in parsing arguments&#39;</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">format_help</span><span class="p">()</span>
+        <span class="nb">print</span> <span class="n">error</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="dyna_to_sandbox"><a class="viewcode-back" href="../../gsm.html#gsm.dbmirror.dyna_to_sandbox">[docs]</a><span class="k">def</span> <span class="nf">dyna_to_sandbox</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of dyna to sandbox is a function that process the exporting of data from dyna and importing data to sandbox by </span>
+<span class="sd">      loading  the data from XML.</span>
+<span class="sd">            </span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+
+    <span class="c1"># get latest sms_id</span>
+    <span class="c1"># print c.db[&quot;user&quot;],c.dbhost[&quot;local&quot;],c.db[&quot;name&quot;],c.db[&quot;password&quot;]</span>
+    <span class="n">sc</span> <span class="o">=</span> <span class="n">mem</span><span class="o">.</span><span class="n">server_config</span><span class="p">()</span>
+    
+    <span class="n">user</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;db&quot;</span><span class="p">][</span><span class="s2">&quot;user&quot;</span><span class="p">]</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;db&quot;</span><span class="p">][</span><span class="s2">&quot;password&quot;</span><span class="p">]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;db&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+
+    <span class="n">sb_host</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">][</span><span class="s2">&quot;sandbox&quot;</span><span class="p">]</span>
+    <span class="n">dyna_host</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">][</span><span class="s2">&quot;dynaslope&quot;</span><span class="p">]</span>
+    <span class="n">gsm_host</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">][</span><span class="s2">&quot;gsm&quot;</span><span class="p">]</span>
+
+    
+    <span class="nb">print</span> <span class="s2">&quot;Checking max sms_id in sandbox smsinbox &quot;</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;mysql -u </span><span class="si">%s</span><span class="s2"> -h </span><span class="si">%s</span><span class="s2"> -e &#39;select max(sms_id) &quot;</span>
+        <span class="s2">&quot;from </span><span class="si">%s</span><span class="s2">.smsinbox&#39; -p</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">sb_host</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+    <span class="c1"># print command</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">max_sms_id</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;Index Error&quot;</span>
+        <span class="nb">print</span> <span class="n">out</span><span class="p">,</span> <span class="n">err</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+    <span class="c1"># max_sms_id = 4104000</span>
+    <span class="nb">print</span> <span class="s2">&quot;Max sms_id from sandbox smsinbox:&quot;</span><span class="p">,</span> <span class="n">max_sms_id</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span>
+
+    <span class="c1"># dump table entries</span>
+    <span class="nb">print</span> <span class="s2">&quot;Dumping tables from gsm host to sandbox dump file ...&quot;</span><span class="p">,</span> 
+
+    <span class="n">f_dump</span> <span class="o">=</span> <span class="s2">&quot;/home/dewsl/Documents/sqldumps/mirrordump.sql&quot;</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;mysqldump -h </span><span class="si">%s</span><span class="s2"> --skip-add-drop-table --no-create-info &quot;</span>
+        <span class="s2">&quot;-u </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> smsinbox --where=&#39;sms_id &gt; </span><span class="si">%s</span><span class="s2">&#39; &gt; </span><span class="si">%s</span><span class="s2"> -p</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">gsm_host</span><span class="p">,</span> 
+            <span class="n">user</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">max_sms_id</span><span class="p">,</span> <span class="n">f_dump</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">or</span> <span class="n">err</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="n">out</span><span class="p">,</span> <span class="n">err</span>
+    <span class="nb">print</span> <span class="s1">&#39;done&#39;</span>
+
+    <span class="c1"># write to local db</span>
+    <span class="nb">print</span> <span class="s2">&quot;Dumping tables from gsm host to sandbox dump file ...&quot;</span><span class="p">,</span> 
+    <span class="n">command</span> <span class="o">=</span> <span class="s2">&quot;mysql -h </span><span class="si">%s</span><span class="s2"> -u </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> &lt; </span><span class="si">%s</span><span class="s2"> -p</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sb_host</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">f_dump</span><span class="p">,</span>
+        <span class="n">password</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="n">command</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+    <span class="nb">print</span> <span class="s1">&#39;done&#39;</span>
+
+    <span class="c1"># delete dump file</span>
+    <span class="nb">print</span> <span class="s2">&quot;Deleting dump file ...&quot;</span><span class="p">,</span> 
+    <span class="n">command</span> <span class="o">=</span> <span class="s2">&quot;rm </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f_dump</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+    <span class="nb">print</span> <span class="s1">&#39;done&#39;</span></div>
+
+<div class="viewcode-block" id="get_max_index_from_table"><a class="viewcode-back" href="../../gsm.html#gsm.dbmirror.get_max_index_from_table">[docs]</a><span class="k">def</span> <span class="nf">get_max_index_from_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process getting of  max index from table is a function that get the max index of the smsinbox.</span>
+<span class="sd">          </span>
+<span class="sd">      :param table: Name of the table for smsinbox</span>
+<span class="sd">      :type table: str</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">         int: Index id of the not yet copied data in dyna.</span>
+<span class="sd">      </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sc</span> <span class="o">=</span> <span class="n">mem</span><span class="o">.</span><span class="n">server_config</span><span class="p">()</span>
+    <span class="n">smsdb_host</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">][</span><span class="n">sc</span><span class="p">[</span><span class="s2">&quot;resource&quot;</span><span class="p">][</span><span class="s2">&quot;smsdb&quot;</span><span class="p">]]</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;db&quot;</span><span class="p">][</span><span class="s2">&quot;user&quot;</span><span class="p">]</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;db&quot;</span><span class="p">][</span><span class="s2">&quot;password&quot;</span><span class="p">]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;db&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+
+    <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;mysql -u </span><span class="si">%s</span><span class="s2"> -h </span><span class="si">%s</span><span class="s2"> -e &#39;select max(inbox_id) from </span><span class="si">%s</span><span class="s2">.smsinbox_</span><span class="si">%s</span><span class="s2"> &quot;</span>
+        <span class="s2">&quot;where gsm_id!=1&#39; -p</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">smsdb_host</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> 
+        <span class="n">password</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="get_last_copied_index"><a class="viewcode-back" href="../../gsm.html#gsm.dbmirror.get_last_copied_index">[docs]</a><span class="k">def</span> <span class="nf">get_last_copied_index</span><span class="p">(</span><span class="n">table_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of getting last copied index is a  function that reads the </span>
+<span class="sd">      value of the index inside the user_inbox_index.tmp.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns: </span>
+<span class="sd">        int: Outputs index id that stored from the user_inbox_index.tmp.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f_index</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/home/dyna/logs/</span><span class="si">%s</span><span class="s2">_inbox_index.tmp&quot;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">max_index_last_copied</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">f_index</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span>
+    <span class="n">f_index</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">max_index_last_copied</span></div>
+
+<div class="viewcode-block" id="import_sql_file_to_dyna"><a class="viewcode-back" href="../../gsm.html#gsm.dbmirror.import_sql_file_to_dyna">[docs]</a><span class="k">def</span> <span class="nf">import_sql_file_to_dyna</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">max_inbox_id</span><span class="p">,</span> <span class="n">max_index_last_copied</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of importing sql file to dyna is a function that process the exporting of data from sanbox and importing data to dyna smsibox2.</span>
+<span class="sd">    This function also change the value of the index in user_inbox_index.tmp.</span>
+
+<span class="sd">    :param table: Name of the table for smsinbox</span>
+<span class="sd">    :param max_inbox_id: Index id of the not yet copied data in dyna</span>
+<span class="sd">    :param max_index_last_copied: Index id that stored from the user_inbox_index.tmp</span>
+<span class="sd">    :type table: str</span>
+<span class="sd">    :type max_inbox_id: int</span>
+<span class="sd">    :type max_index_last_copied: int</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span> <span class="s2">&quot;importing to dyna tables&quot;</span>
+    <span class="nb">print</span> <span class="n">table</span>
+
+    <span class="n">sc</span> <span class="o">=</span> <span class="n">mem</span><span class="o">.</span><span class="n">server_config</span><span class="p">()</span>
+    
+    <span class="n">smsdb_host</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;resource&quot;</span><span class="p">][</span><span class="s2">&quot;smsdb&quot;</span><span class="p">]</span>
+    <span class="n">smsdb2_host</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;resource&quot;</span><span class="p">][</span><span class="s2">&quot;smsdb2&quot;</span><span class="p">]</span>
+
+    <span class="n">host_ip</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">][</span><span class="n">smsdb_host</span><span class="p">]</span>
+    <span class="n">host_ip2</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">][</span><span class="n">smsdb2_host</span><span class="p">]</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;db&quot;</span><span class="p">][</span><span class="s2">&quot;user&quot;</span><span class="p">]</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;db&quot;</span><span class="p">][</span><span class="s2">&quot;password&quot;</span><span class="p">]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;db&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+
+    <span class="n">copy_query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;SELECT t1.ts_sms as &#39;timestamp&#39;, t2.sim_num, t1.sms_msg, &quot;</span>
+        <span class="s2">&quot;&#39;UNREAD&#39; as read_status, &#39;W&#39; AS web_flag FROM smsinbox_</span><span class="si">%s</span><span class="s2"> t1 &quot;</span>
+        <span class="s2">&quot;inner join (select mobile_id, sim_num from </span><span class="si">%s</span><span class="s2">_mobile) t2 &quot;</span>
+        <span class="s2">&quot;on t1.mobile_id = t2.mobile_id where t1.gsm_id !=1 &quot;</span>
+        <span class="s2">&quot;and t1.inbox_id &lt; </span><span class="si">%d</span><span class="s2"> and t1.inbox_id &gt; </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">table</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> 
+            <span class="n">max_inbox_id</span><span class="p">,</span> <span class="n">max_index_last_copied</span><span class="p">)</span>
+
+    <span class="n">f_dump</span> <span class="o">=</span> <span class="s2">&quot;/home/dyna/logs/sandbox_</span><span class="si">%s</span><span class="s2">_dump.sql&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">table</span><span class="p">)</span>
+
+    <span class="c1"># export files from the table and dump to a file</span>
+
+    <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;mysql -e </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -h</span><span class="si">%s</span><span class="s2"> senslopedb -uroot -p</span><span class="si">%s</span><span class="s2"> --xml &gt;&quot;</span>
+            <span class="s2">&quot; </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">copy_query</span><span class="p">,</span> <span class="n">host_ip</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">f_dump</span><span class="p">))</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+    <span class="nb">print</span> <span class="n">command</span>
+    <span class="nb">print</span> <span class="s2">&quot;&quot;</span>
+    <span class="c1"># # print err</span>
+
+    <span class="n">import_query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;LOAD XML LOCAL INFILE &#39;</span><span class="si">%s</span><span class="s2">&#39; INTO TABLE smsinbox2&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f_dump</span><span class="p">))</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;mysql -e </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -h</span><span class="si">%s</span><span class="s2"> senslopedb -uroot -p</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">import_query</span><span class="p">,</span>
+        <span class="n">host_ip2</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+    <span class="nb">print</span> <span class="n">command</span>
+
+    <span class="c1"># write new value in max_index_last_copied</span>
+    <span class="n">f_index</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/home/dyna/logs/</span><span class="si">%s</span><span class="s2">_inbox_index.tmp&quot;</span> <span class="o">%</span> <span class="n">table</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span>
+    <span class="n">f_index</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">max_inbox_id</span><span class="p">))</span>
+    <span class="n">f_index</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># delete dump file</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="s2">&quot;rm </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f_dump</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="sandbox_to_dyna"><a class="viewcode-back" href="../../gsm.html#gsm.dbmirror.sandbox_to_dyna">[docs]</a><span class="k">def</span> <span class="nf">sandbox_to_dyna</span><span class="p">(</span><span class="n">table_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of sandbox to dyna is a function that process the mirroring data of sandbox to dyna by comparing</span>
+<span class="sd">    the max index of  the not yet copied data from dyna and the last copied index</span>
+<span class="sd">    from dyna.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># get index of items not yet copied to dyna</span>
+    <span class="nb">print</span> <span class="s2">&quot;sandbox -&gt; dyna&quot;</span>
+
+    <span class="n">table</span> <span class="o">=</span> <span class="n">table_name</span>
+    <span class="n">max_inbox_id</span> <span class="o">=</span> <span class="n">get_max_index_from_table</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;max index from table:&quot;</span><span class="p">,</span> <span class="n">max_inbox_id</span>
+
+    <span class="c1"># check if this index is already copied</span>
+    <span class="n">max_index_last_copied</span> <span class="o">=</span> <span class="n">get_last_copied_index</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;max index copied:&quot;</span><span class="p">,</span> <span class="n">max_index_last_copied</span>
+
+    <span class="k">if</span> <span class="n">max_inbox_id</span> <span class="o">&gt;</span> <span class="n">max_index_last_copied</span><span class="p">:</span>
+        <span class="n">import_sql_file_to_dyna</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">max_inbox_id</span><span class="p">,</span> <span class="n">max_index_last_copied</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;smsinbox2 up to date&quot;</span></div>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../gsm.html#gsm.dbmirror.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The main is a function that runs the whole dbmirror with the logic of</span>
+<span class="sd">      checking if the dbmirror must run the dyna to sandbox </span>
+<span class="sd">      or the sandbox to dyna for mirroring the data.</span>
+
+<span class="sd">    .. todo::</span>
+<span class="sd">        1. To run the script **open** a terminal or bash </span>
+<span class="sd">        2. Set your terminal/bash path to **/centraserver/gsm/**</span>
+<span class="sd">        3. Type inside the terminal/bash  **python dbmirror.py -m1** for dyna</span>
+<span class="sd">           to sandbox and **python dbmirror.py -m2 -t users/loggers** for sanbox </span>
+<span class="sd">           to dyna.</span>
+<span class="sd">        4. Click Enter</span>
+<span class="sd">       </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">get_arguments</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">dyna_to_sandbox</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">sandbox_to_dyna</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">execute</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; Error: No mode given&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; Error: mode not available (</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

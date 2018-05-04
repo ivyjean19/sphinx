@@ -1,0 +1,568 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gsm.alertmessaging &mdash; Central Server Documentation 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Central Server Documentation 1.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Central Server Documentation
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dynadb.html">dynadb package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gsm.html">gsm package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../volatile.html">volatile package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Central Server Documentation</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>gsm.alertmessaging</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gsm.alertmessaging</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">timedelta</span> <span class="k">as</span> <span class="n">td</span>
+<span class="kn">import</span> <span class="nn">dynadb.db</span> <span class="k">as</span> <span class="nn">dbio</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">smstables</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="c1">#---------------------------------------------------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="get_alert_staff_numbers"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.get_alert_staff_numbers">[docs]</a><span class="k">def</span> <span class="nf">get_alert_staff_numbers</span><span class="p">():</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;select t1.user_id,t2.sim_num from user_alert_info t1 inner join&quot;</span>
+        <span class="s2">&quot; user_mobile t2 on t1.user_id = t2.user_id where t1.send_alert = 1;&quot;</span><span class="p">)</span>
+
+    <span class="n">contacts</span> <span class="o">=</span> <span class="n">dbio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span><span class="s1">&#39;checkalert&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">contacts</span></div>
+
+<div class="viewcode-block" id="monitoring_start"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.monitoring_start">[docs]</a><span class="k">def</span> <span class="nf">monitoring_start</span><span class="p">(</span><span class="n">site_id</span><span class="p">,</span> <span class="n">ts_last_retrigger</span><span class="p">):</span>
+
+    <span class="n">query</span> <span class="o">=</span>  <span class="s2">&quot;SELECT ts, ts_updated FROM &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  (SELECT * FROM public_alerts &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  WHERE site_id = </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span><span class="n">site_id</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  AND (ts_updated &lt;= &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span> <span class="o">%</span><span class="n">ts_last_retrigger</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;    OR (ts_updated &gt;= &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span> <span class="o">%</span><span class="n">ts_last_retrigger</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;      AND ts &lt;= &#39;</span><span class="si">%s</span><span class="s2">&#39;)) &quot;</span> <span class="o">%</span><span class="n">ts_last_retrigger</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  ) AS pub &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;INNER JOIN &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  (SELECT * FROM public_alert_symbols &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  WHERE alert_type = &#39;event&#39;) AS sym &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;ON pub.pub_sym_id = sym.pub_sym_id &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;ORDER BY ts DESC LIMIT 3&quot;</span>
+
+    <span class="c1"># previous positive alert</span>
+    <span class="n">prev_pub_alerts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">dbio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">)),</span>
+                                      <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ts&#39;</span><span class="p">,</span> <span class="s1">&#39;ts_updated&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">start_monitor</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;ts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="c1"># two previous positive alert</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># one event with two previous positive alert</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;ts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> \
+                <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;ts_updated&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span> \
+                <span class="n">td</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+            <span class="n">start_monitor</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;ts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start_monitor</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;ts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="c1"># three previous positive alert</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;ts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> \
+                <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;ts_updated&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span> \
+                <span class="n">td</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+            <span class="c1"># one event with three previous positive alert</span>
+            <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;ts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> \
+                    <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;ts_updated&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> \
+                    <span class="o">&lt;=</span> <span class="n">td</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+                <span class="n">start_monitor</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span>\
+                        <span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="c1"># one event with two previous positive alert</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">start_monitor</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;ts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start_monitor</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">prev_pub_alerts</span><span class="p">[</span><span class="s1">&#39;ts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">start_monitor</span></div>
+
+<div class="viewcode-block" id="rainfall_details"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.rainfall_details">[docs]</a><span class="k">def</span> <span class="nf">rainfall_details</span><span class="p">(</span><span class="n">site_id</span><span class="p">,</span> <span class="n">start_monitor</span><span class="p">,</span> <span class="n">ts_last_retrigger</span><span class="p">):</span>
+    <span class="n">query</span> <span class="o">=</span>  <span class="s2">&quot;SELECT gauge_name FROM &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  (SELECT * FROM rainfall_alerts &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  WHERE site_id = </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span><span class="n">site_id</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  AND ts &gt;= &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span> <span class="o">%</span><span class="n">start_monitor</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  AND ts &lt;= &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span> <span class="o">%</span><span class="n">ts_last_retrigger</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  ) AS alerts &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;INNER JOIN &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  rainfall_gauges &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;USING (rain_id) &quot;</span>
+    <span class="n">data_source_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">dbio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">)),</span>
+                                  <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;gauge_name&#39;</span><span class="p">])</span>
+    <span class="n">data_source</span> <span class="o">=</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">data_source_df</span><span class="p">[</span><span class="s1">&#39;gauge_name&#39;</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">data_source</span></div>
+
+<div class="viewcode-block" id="subsurface_details"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.subsurface_details">[docs]</a><span class="k">def</span> <span class="nf">subsurface_details</span><span class="p">(</span><span class="n">site_id</span><span class="p">,</span> <span class="n">start_monitor</span><span class="p">,</span> <span class="n">ts_last_retrigger</span><span class="p">):</span>
+    <span class="n">query</span> <span class="o">=</span>  <span class="s2">&quot;SELECT node_id, tsm_name FROM &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  (SELECT * FROM node_alerts &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  WHERE ts &gt;= &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span> <span class="o">%</span><span class="n">start_monitor</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  AND ts &lt;= &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span> <span class="o">%</span><span class="n">ts_last_retrigger</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  ) AS alerts &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;INNER JOIN &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  (SELECT * FROM tsm_sensors &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  WHERE site_id = &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span> <span class="o">%</span><span class="n">site_id</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  ) AS sensors &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;USING (tsm_id)&quot;</span>
+    <span class="n">data_source_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">dbio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">)),</span>
+                                  <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;tsm_name&#39;</span><span class="p">])</span>
+    <span class="n">data_source_df</span> <span class="o">=</span> <span class="n">data_source_df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">([</span><span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;tsm_name&#39;</span><span class="p">])</span>
+    <span class="n">tsm_source_df</span> <span class="o">=</span> <span class="n">data_source_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;tsm_name&#39;</span><span class="p">,</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">data_source</span> <span class="o">=</span> <span class="s1">&#39;:&#39;</span><span class="o">+</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tsm_source_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">tsm_details</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">data_source</span></div>
+
+<div class="viewcode-block" id="tsm_details"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.tsm_details">[docs]</a><span class="k">def</span> <span class="nf">tsm_details</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;node&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">))))</span>
+    <span class="n">lst</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;tsm_name&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="n">nodes</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+    <span class="k">return</span> <span class="n">lst</span></div>
+
+<div class="viewcode-block" id="surficial_details"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.surficial_details">[docs]</a><span class="k">def</span> <span class="nf">surficial_details</span><span class="p">(</span><span class="n">site_id</span><span class="p">,</span> <span class="n">start_monitor</span><span class="p">,</span> <span class="n">ts_last_retrigger</span><span class="p">):</span>
+    <span class="n">query</span> <span class="o">=</span>  <span class="s2">&quot;SELECT marker_name FROM &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  (SELECT * FROM marker_alerts &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  WHERE ts &gt;= &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span> <span class="o">%</span><span class="n">start_monitor</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  AND ts &lt;= &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span> <span class="o">%</span><span class="n">ts_last_retrigger</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  AND alert_level &gt; 0 &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  ) AS alerts &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;INNER JOIN &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  (SELECT marker_id, marker_name FROM &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;    (SELECT hist.marker_id, hist.history_id FROM &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;        (SELECT marker_id, MAX(ts) AS ts &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;        FROM marker_history &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;        WHERE event in (&#39;add&#39;, &#39;rename&#39;) &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;        GROUP BY marker_id &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;        ) AS M &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;      INNER JOIN &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;        (SELECT * &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;        FROM marker_history &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;        WHERE event in (&#39;add&#39;, &#39;rename&#39;) &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;        ) AS hist &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;      USING (marker_id, ts) &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;    WHERE marker_id IN ( &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;      SELECT marker_id &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;      FROM markers &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;      WHERE site_id = </span><span class="si">%s</span><span class="s2">) &quot;</span> <span class="o">%</span><span class="n">site_id</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;    ) AS site_hist &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  INNER JOIN &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;    marker_names &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  USING(history_id) &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;  ) AS names &quot;</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;USING (marker_id) &quot;</span>
+    <span class="n">data_source_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">dbio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">)),</span>
+                                  <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;marker_name&#39;</span><span class="p">])</span>
+    <span class="n">data_source</span> <span class="o">=</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">data_source_df</span><span class="p">[</span><span class="s1">&#39;marker_name&#39;</span><span class="p">]))</span>
+    
+    <span class="k">return</span> <span class="n">data_source</span></div>
+
+<div class="viewcode-block" id="alert_details"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.alert_details">[docs]</a><span class="k">def</span> <span class="nf">alert_details</span><span class="p">(</span><span class="n">site_id</span><span class="p">,</span> <span class="n">trigger_source</span><span class="p">,</span> <span class="n">ts_last_retrigger</span><span class="p">):</span>
+    
+    <span class="n">start_monitor</span> <span class="o">=</span> <span class="n">monitoring_start</span><span class="p">(</span><span class="n">site_id</span><span class="p">,</span> <span class="n">ts_last_retrigger</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">trigger_source</span> <span class="o">==</span> <span class="s1">&#39;rainfall&#39;</span><span class="p">:</span>
+        <span class="n">data_source</span> <span class="o">=</span> <span class="n">rainfall_details</span><span class="p">(</span><span class="n">site_id</span><span class="p">,</span> <span class="n">start_monitor</span><span class="p">,</span> <span class="n">ts_last_retrigger</span><span class="p">)</span>
+        
+    <span class="k">elif</span> <span class="n">trigger_source</span> <span class="o">==</span> <span class="s1">&#39;subsurface&#39;</span><span class="p">:</span>
+        <span class="n">data_source</span> <span class="o">=</span> <span class="n">subsurface_details</span><span class="p">(</span><span class="n">site_id</span><span class="p">,</span> <span class="n">start_monitor</span><span class="p">,</span> <span class="n">ts_last_retrigger</span><span class="p">)</span>
+        
+    <span class="k">elif</span> <span class="n">trigger_source</span> <span class="o">==</span> <span class="s1">&#39;surficial&#39;</span><span class="p">:</span>
+        <span class="n">data_source</span> <span class="o">=</span> <span class="n">surficial_details</span><span class="p">(</span><span class="n">site_id</span><span class="p">,</span> <span class="n">start_monitor</span><span class="p">,</span> <span class="n">ts_last_retrigger</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  
+        <span class="n">data_source</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    
+    <span class="k">return</span> <span class="n">data_source</span></div>
+
+<div class="viewcode-block" id="send_alert_message"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.send_alert_message">[docs]</a><span class="k">def</span> <span class="nf">send_alert_message</span><span class="p">():</span>
+    <span class="c1"># check due alert messages</span>
+    <span class="c1"># ts_due = dt.today()</span>
+    <span class="c1"># query = (&quot;select alert_id, alert_msg from sms_alerts where alert_status is&quot;</span>
+    <span class="c1">#     &quot; null and ts_set &lt;= &#39;%s&#39;&quot;) % (ts_due.strftime(&quot;%Y-%m-%d %H:%M:%S&quot;))</span>
+
+    <span class="c1"># alertmsg = dbio.read(query,&#39;send_alert_message&#39;)</span>
+    <span class="n">alert_msgs</span> <span class="o">=</span> <span class="n">check_alerts</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">alert_msgs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;No alertmsg set for sending&#39;</span>
+        <span class="k">return</span>
+
+    <span class="k">for</span> <span class="n">stat_id</span><span class="p">,</span> <span class="n">site_id</span><span class="p">,</span> <span class="n">site_code</span><span class="p">,</span> <span class="n">trigger_source</span><span class="p">,</span> <span class="n">alert_symbol</span><span class="p">,</span> <span class="n">ts_last_retrigger</span> <span class="ow">in</span> <span class="n">alert_msgs</span><span class="p">:</span>
+        <span class="n">tlr_str</span> <span class="o">=</span> <span class="n">ts_last_retrigger</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;SANDBOX:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;As of </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Alert ID </span><span class="si">%d</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">tlr_str</span><span class="p">,</span> <span class="n">stat_id</span><span class="p">,</span> <span class="n">site_code</span><span class="p">,</span>
+                          <span class="n">alert_symbol</span><span class="p">,</span> <span class="n">trigger_source</span><span class="p">)</span>
+        
+        <span class="n">message</span> <span class="o">+=</span> <span class="n">alert_details</span><span class="p">(</span><span class="n">site_id</span><span class="p">,</span> <span class="n">trigger_source</span><span class="p">,</span> <span class="n">ts_last_retrigger</span><span class="p">)</span>
+            
+        <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Text</span><span class="se">\n</span><span class="s2">Sandbox ACK &lt;alert_id&gt; &lt;validity&gt; &lt;remarks&gt;&quot;</span>
+
+        <span class="nb">print</span> <span class="n">message</span>
+    
+        <span class="c1"># send to alert staff</span>
+        <span class="n">contacts</span> <span class="o">=</span> <span class="n">get_alert_staff_numbers</span><span class="p">()</span>
+        <span class="n">recipients_list</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">mobile_id</span><span class="p">,</span> <span class="n">sim_num</span> <span class="ow">in</span> <span class="n">contacts</span><span class="p">:</span>
+            <span class="n">recipients_list</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sim_num</span><span class="p">)</span>
+        <span class="n">recipients_list</span> <span class="o">=</span> <span class="n">recipients_list</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">smstables</span><span class="o">.</span><span class="n">write_outbox</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span> <span class="n">recipients</span><span class="o">=</span><span class="n">recipients_list</span><span class="p">,</span>
+            <span class="n">gsm_id</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s1">&#39;users&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># # set alert to 15 mins later</span>
+        <span class="n">ts_due</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">+</span> <span class="n">td</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">60</span><span class="o">*</span><span class="mi">15</span><span class="p">)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;update alert_status set ts_set = &#39;</span><span class="si">%s</span><span class="s2">&#39; where &quot;</span>
+            <span class="s2">&quot;stat_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">ts_due</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">),</span>
+            <span class="n">stat_id</span><span class="p">)</span>
+
+        <span class="n">dbio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="s1">&#39;checkalertmsg&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="check_alerts"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.check_alerts">[docs]</a><span class="k">def</span> <span class="nf">check_alerts</span><span class="p">():</span>
+    <span class="n">ts_now</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;SELECT stat_id, site_id, site_code, trigger_source, &quot;</span>
+            <span class="s2">&quot;alert_symbol, ts_last_retrigger FROM &quot;</span>
+            <span class="s2">&quot;(SELECT stat_id, ts_last_retrigger, site_id, &quot;</span>
+            <span class="s2">&quot;trigger_source, alert_symbol FROM &quot;</span>
+            <span class="s2">&quot;(SELECT stat_id, ts_last_retrigger, site_id, &quot;</span>
+            <span class="s2">&quot;trigger_sym_id FROM &quot;</span>
+            <span class="s2">&quot;(SELECT * FROM alert_status &quot;</span>
+            <span class="s2">&quot;WHERE ts_set &lt; &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span> 
+            <span class="s2">&quot;and ts_ack is NULL &quot;</span>
+            <span class="s2">&quot;) AS stat &quot;</span>
+            <span class="s2">&quot;INNER JOIN &quot;</span>
+            <span class="s2">&quot;operational_triggers AS op &quot;</span>
+            <span class="s2">&quot;USING (trigger_id) &quot;</span>
+            <span class="s2">&quot;) AS trig &quot;</span>
+            <span class="s2">&quot;INNER JOIN &quot;</span>
+            <span class="s2">&quot;(SELECT trigger_sym_id, trigger_source, &quot;</span>
+            <span class="s2">&quot;alert_level, alert_symbol FROM &quot;</span>
+            <span class="s2">&quot;operational_trigger_symbols &quot;</span>
+            <span class="s2">&quot;INNER JOIN &quot;</span>
+            <span class="s2">&quot;trigger_hierarchies &quot;</span>
+            <span class="s2">&quot;USING (source_id) &quot;</span>
+            <span class="s2">&quot;) as sym &quot;</span>
+            <span class="s2">&quot;USING (trigger_sym_id)) AS alert &quot;</span>
+            <span class="s2">&quot;INNER JOIN &quot;</span>
+            <span class="s2">&quot;sites &quot;</span>
+            <span class="s2">&quot;USING (site_id)&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">ts_now</span><span class="p">)</span>
+
+    <span class="n">alert_msgs</span> <span class="o">=</span> <span class="n">dbio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span><span class="s1">&#39;check_alerts&#39;</span><span class="p">)</span>
+
+    <span class="nb">print</span> <span class="s2">&quot;alert messages:&quot;</span><span class="p">,</span> <span class="n">alert_msgs</span>
+
+    <span class="k">return</span> <span class="n">alert_msgs</span></div>
+
+<div class="viewcode-block" id="get_name_of_staff"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.get_name_of_staff">[docs]</a><span class="k">def</span> <span class="nf">get_name_of_staff</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+    <span class="n">query</span> <span class="o">=</span>  <span class="p">(</span><span class="s2">&quot;select t1.user_id, t2.nickname from user_mobile t1 inner join users t2 on &quot;</span>
+        <span class="s2">&quot;t1.user_id = t2.user_id where t1.sim_num = &#39;</span><span class="si">%s</span><span class="s2">&#39;;&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">number</span><span class="p">)</span>
+
+    <span class="c1"># print query</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">dbio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span><span class="s1">&#39;customquery&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">name</span></div>
+
+<div class="viewcode-block" id="process_ack_to_alert"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.process_ack_to_alert">[docs]</a><span class="k">def</span> <span class="nf">process_ack_to_alert</span><span class="p">(</span><span class="n">sms</span><span class="p">):</span>
+
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">stat_id</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;(?&lt;=K )\d+(?= )&quot;</span><span class="p">,</span> <span class="n">sms</span><span class="o">.</span><span class="n">msg</span><span class="p">,</span><span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="n">errmsg</span> <span class="o">=</span> <span class="s2">&quot;Error in parsing alert id. Please try again&quot;</span>
+        <span class="c1"># smstables.write_outbox(errmsg,sms.sim_num)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">user_id</span><span class="p">,</span> <span class="n">nickname</span> <span class="o">=</span> <span class="n">get_name_of_staff</span><span class="p">(</span><span class="n">sms</span><span class="o">.</span><span class="n">sim_num</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">nickname</span><span class="p">,</span> <span class="n">sms</span><span class="o">.</span><span class="n">msg</span>
+    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;server&quot;</span><span class="p">,</span><span class="n">nickname</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">nickname</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;(?&lt;=-).+(?= from)&quot;</span><span class="p">,</span> <span class="n">sms</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;Error in processing nickname&quot;</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#     name = nickname</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">remarks</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;(?&lt;=\d ).+(?=($|</span><span class="se">\r</span><span class="s2">|</span><span class="se">\n</span><span class="s2">))&quot;</span><span class="p">,</span><span class="n">sms</span><span class="o">.</span><span class="n">msg</span><span class="p">,</span> 
+            <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">errmsg</span> <span class="o">=</span> <span class="s2">&quot;Please put in your remarks.&quot;</span>
+        <span class="n">smstables</span><span class="o">.</span><span class="n">write_outbox</span><span class="p">(</span><span class="n">message</span> <span class="o">=</span> <span class="n">errmsg</span><span class="p">,</span> <span class="n">recipients</span> <span class="o">=</span> <span class="n">sms</span><span class="o">.</span><span class="n">sim_num</span><span class="p">,</span>
+            <span class="n">gsm_id</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">table</span><span class="o">=</span><span class="s1">&#39;users&#39;</span><span class="p">)</span>
+        <span class="c1"># write_outbox_dyna(errmsg, sms.sim_num)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">alert_status</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;(in)*valid(ating)*&quot;</span><span class="p">,</span> <span class="n">remarks</span><span class="p">,</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">remarks</span> <span class="o">=</span> <span class="n">remarks</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">alert_status</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">errmsg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Please put in the alert status validity.&quot;</span>
+            <span class="s2">&quot; i.e (VALID, INVALID, VALIDATING)&quot;</span><span class="p">)</span>
+        <span class="n">smstables</span><span class="o">.</span><span class="n">write_outbox</span><span class="p">(</span><span class="n">message</span> <span class="o">=</span> <span class="n">errmsg</span><span class="p">,</span> <span class="n">recipients</span> <span class="o">=</span> <span class="n">sms</span><span class="o">.</span><span class="n">sim_num</span><span class="p">,</span>
+            <span class="n">gsm_id</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s1">&#39;users&#39;</span><span class="p">)</span>
+        <span class="c1"># write_outbox_dyna(errmsg, sms.sim_num)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">alert_status_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;validating&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;valid&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;invalid&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">}</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;update alert_status set user_id = </span><span class="si">%d</span><span class="s2">, alert_status = </span><span class="si">%d</span><span class="s2">, &quot;</span>
+        <span class="s2">&quot;ts_ack = &#39;</span><span class="si">%s</span><span class="s2">&#39;, remarks = &#39;</span><span class="si">%s</span><span class="s2">&#39; where stat_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="n">alert_status_dict</span><span class="p">[</span><span class="n">alert_status</span><span class="o">.</span><span class="n">lower</span><span class="p">()],</span> <span class="n">sms</span><span class="o">.</span><span class="n">ts</span><span class="p">,</span> <span class="n">remarks</span><span class="p">,</span> <span class="n">stat_id</span><span class="p">)</span>
+    <span class="c1"># print query</span>
+    <span class="n">dbio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">query</span><span class="p">,</span><span class="n">process_ack_to_alert</span><span class="p">)</span>
+
+    <span class="n">contacts</span> <span class="o">=</span> <span class="n">get_alert_staff_numbers</span><span class="p">()</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;SANDBOX (test ack):</span><span class="se">\n</span><span class="s2">Alert ID </span><span class="si">%s</span><span class="s2"> ACK by </span><span class="si">%s</span><span class="s2"> on </span><span class="si">%s</span><span class="se">\n</span><span class="s2">Status: </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;Remarks: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">stat_id</span><span class="p">,</span> <span class="n">nickname</span><span class="p">,</span> <span class="n">sms</span><span class="o">.</span><span class="n">ts</span><span class="p">,</span> <span class="n">alert_status</span><span class="p">,</span> <span class="n">remarks</span><span class="p">)</span>
+    
+    <span class="n">tsw</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+    <span class="n">recipients_list</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">mobile_id</span><span class="p">,</span> <span class="n">sim_num</span> <span class="ow">in</span> <span class="n">contacts</span><span class="p">:</span>
+        <span class="n">recipients_list</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sim_num</span><span class="p">)</span>
+    <span class="n">recipents_list</span> <span class="o">=</span> <span class="n">recipients_list</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">smstables</span><span class="o">.</span><span class="n">write_outbox</span><span class="p">(</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span><span class="p">,</span> <span class="n">recipients</span> <span class="o">=</span> <span class="n">recipients_list</span><span class="p">,</span>
+        <span class="n">gsm_id</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s1">&#39;users&#39;</span><span class="p">)</span>
+    <span class="c1"># write_outbox_dyna(message,sim_num)</span>
+    <span class="c1"># print message, sim_num</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="update_shift_tags"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.update_shift_tags">[docs]</a><span class="k">def</span> <span class="nf">update_shift_tags</span><span class="p">():</span>
+    <span class="c1"># remove tags to old shifts</span>
+    <span class="n">today</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s1">&#39;Updating shift tags for&#39;</span><span class="p">,</span> <span class="n">today</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;update senslopedb.dewslcontacts set grouptags = &quot;</span>
+        <span class="s2">&quot;replace(grouptags,&#39;,alert-mon&#39;,&#39;&#39;) where grouptags like &#39;%alert-mon%&#39;&quot;</span><span class="p">)</span>
+    <span class="n">dbio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="s1">&#39;update_shift_tags&#39;</span><span class="p">)</span>
+
+    <span class="c1"># update the tags of current shifts</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;update dewslcontacts as t1,&quot;</span>
+        <span class="s2">&quot;(select timestamp,iompmt,iompct,oomps,oompmt,oompct from monshiftsched&quot;</span>
+        <span class="s2">&quot;  where timestamp &lt; &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span>
+        <span class="s2">&quot;  order by timestamp desc limit 1&quot;</span>
+        <span class="s2">&quot;) as t2&quot;</span>
+        <span class="s2">&quot;set t1.grouptags = concat(t1.grouptags,&#39;,alert-mon&#39;)&quot;</span>
+        <span class="s2">&quot;where t1.nickname = t2.iompmt or&quot;</span>
+        <span class="s2">&quot;t1.nickname = t2.iompct or&quot;</span>
+        <span class="s2">&quot;t1.nickname = t2.oomps or&quot;</span>
+        <span class="s2">&quot;t1.nickname = t2.oompmt or&quot;</span>
+        <span class="s2">&quot;t1.nickname = t2.oompct&quot;</span>
+        <span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">today</span><span class="p">)</span>
+    <span class="n">dbio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="s1">&#39;update_shift_tags&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../gsm.html#gsm.alertmessaging.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">desc_str</span> <span class="o">=</span> <span class="s2">&quot;Request information from server</span><span class="se">\n</span><span class="s2"> PSIR [-options]&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">desc_str</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-w&quot;</span><span class="p">,</span> <span class="s2">&quot;--writetodb&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;write alert to db&quot;</span><span class="p">,</span> 
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--send_alert_message&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;send alert messages from db&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-u&quot;</span><span class="p">,</span> <span class="s2">&quot;--updateshifts&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;update shifts with alert tag&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-cs&quot;</span><span class="p">,</span> <span class="s2">&quot;--checksendalert&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;check alert then send&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="s2">&quot;--check_alerts&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;check alerts&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
+    
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Error in parsing in line arguments&#39;</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">format_help</span><span class="p">()</span>
+        <span class="nb">print</span> <span class="n">error</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">writetodb</span><span class="p">:</span> 
+        <span class="n">writetodb</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">send_alert_message</span><span class="p">:</span>
+        <span class="n">send_alert_message</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">updateshifts</span><span class="p">:</span>
+        <span class="n">update_shift_tags</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">check_alerts</span><span class="p">:</span>
+        <span class="n">check_alerts</span><span class="p">()</span></div>
+
+    
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

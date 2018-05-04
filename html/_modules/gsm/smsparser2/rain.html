@@ -1,0 +1,440 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gsm.smsparser2.rain &mdash; Central Server Documentation 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Central Server Documentation 1.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Central Server Documentation
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dynadb.html">dynadb package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gsm.html">gsm package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../volatile.html">volatile package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Central Server Documentation</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>gsm.smsparser2.rain</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gsm.smsparser2.rain</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span><span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">smsclass</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt</span>
+<span class="kn">import</span> <span class="nn">dynadb.db</span> <span class="k">as</span> <span class="nn">dynadb</span>
+
+
+<div class="viewcode-block" id="check_number_in_users"><a class="viewcode-back" href="../../../gsm.smsparser2.html#gsm.smsparser2.rain.check_number_in_users">[docs]</a><span class="k">def</span> <span class="nf">check_number_in_users</span><span class="p">(</span><span class="n">num</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of querying the mobile number to check if the number exists.</span>
+
+<span class="sd">    :param num: Instance hostname.</span>
+<span class="sd">    :type num: str</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: Query output for success and return False if fails.</span>
+
+<span class="sd">    Example Output::</span>
+
+<span class="sd">        &gt;&gt;&gt; x = check_number_in_users(&#39;639263818956&#39;)</span>
+<span class="sd">        ((2,),)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>   
+    <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;select user_id from user_mobile&quot;</span> 
+    <span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;where sim_num = &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">num</span><span class="p">)</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">dynadb</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span> 
+        <span class="n">identifier</span><span class="o">=</span><span class="s1">&#39;check if number user exists&#39;</span><span class="p">,</span> 
+        <span class="n">instance</span><span class="o">=</span><span class="s1">&#39;local&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">query</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">query</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="check_logger_model"><a class="viewcode-back" href="../../../gsm.smsparser2.html#gsm.smsparser2.rain.check_logger_model">[docs]</a><span class="k">def</span> <span class="nf">check_logger_model</span><span class="p">(</span><span class="n">logger_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of querying the logger name  to check if the logger name exists.</span>
+
+<span class="sd">    :param logger_name: Instance hostname.</span>
+<span class="sd">    :type logger_name: str</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Query output for success and return False if fails.</span>
+
+<span class="sd">    Example Output::</span>
+
+<span class="sd">        &gt;&gt;&gt; x = check_logger_model(&#39;agbta&#39;)</span>
+<span class="sd">        6</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>  
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;SELECT model_id FROM loggers where &quot;</span>
+        <span class="s2">&quot;logger_name = &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="n">logger_name</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="n">dynadb</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span><span class="s1">&#39;check_logger_model&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">query</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">query</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="check_name_of_number"><a class="viewcode-back" href="../../../gsm.smsparser2.html#gsm.smsparser2.rain.check_name_of_number">[docs]</a><span class="k">def</span> <span class="nf">check_name_of_number</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of querying the mobile number  to check the cellphone number logger name.</span>
+
+<span class="sd">    :param number: Cellphone number.</span>
+<span class="sd">    :type number: int</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Query output for success and return False if fails.</span>
+
+<span class="sd">    Example Output::</span>
+
+<span class="sd">        &gt;&gt;&gt; x = check_name_of_number(&#39;639173082161&#39;)</span>
+<span class="sd">        agbta</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>  
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;select logger_name from loggers where &quot;</span>
+                <span class="s2">&quot;logger_id = (select logger_id from logger_mobile &quot;</span>
+                <span class="s2">&quot;where sim_num = &#39;</span><span class="si">%s</span><span class="s2">&#39; order by date_activated desc limit 1)&quot;</span> 
+                <span class="o">%</span> <span class="p">(</span><span class="n">number</span><span class="p">)</span>
+                <span class="p">)</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">dynadb</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span><span class="s1">&#39;check_name_of_number&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">query</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">query</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="rain_arq"><a class="viewcode-back" href="../../../gsm.smsparser2.html#gsm.smsparser2.rain.rain_arq">[docs]</a><span class="k">def</span> <span class="nf">rain_arq</span><span class="p">(</span><span class="n">sms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of parsing data of Arq message of rain.</span>
+
+<span class="sd">    :param sms: Dictionary of sms info.</span>
+<span class="sd">    :type sms: obj</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">       DataFrame: Dataframe output for success parsing and return</span>
+<span class="sd">       False if fails.</span>
+
+<span class="sd">    Example Output::</span>
+<span class="sd">        </span>
+<span class="sd">                            battery1 battery2 csq humidity  rain temperature</span>
+<span class="sd">        ts</span>
+<span class="sd">        2018-04-26 13:30:58    4.143    4.158   9     69.8   0.0        30.0</span>
+<span class="sd">       </span>
+<span class="sd">    &quot;&quot;&quot;</span>       
+    <span class="c1">#msg = message</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">sms</span><span class="o">.</span><span class="n">msg</span>
+    <span class="n">sender</span> <span class="o">=</span> <span class="n">sms</span><span class="o">.</span><span class="n">sim_num</span>
+
+    <span class="nb">print</span> <span class="s1">&#39;ARQ Weather data: &#39;</span> <span class="o">+</span> <span class="n">line</span>
+
+    <span class="n">line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;(?&lt;=\+) (?=\+)&quot;</span><span class="p">,</span><span class="s2">&quot;NULL&quot;</span><span class="p">,</span><span class="n">line</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1">#table name</span>
+        <span class="n">linesplit</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+       
+        <span class="n">msgname</span> <span class="o">=</span> <span class="n">check_name_of_number</span><span class="p">(</span><span class="n">sender</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">msgname</span><span class="p">:</span>
+            <span class="n">msgname</span> <span class="o">=</span> <span class="n">msgname</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; Number registered as&quot;</span><span class="p">,</span> <span class="n">msgname</span>
+            <span class="n">msgname_contact</span> <span class="o">=</span> <span class="n">msgname</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; None type&quot;</span>
+            <span class="k">return</span>
+
+            
+        <span class="n">rain</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">linesplit</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="mf">0.5</span>
+        <span class="n">batv1</span> <span class="o">=</span> <span class="n">linesplit</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">batv2</span> <span class="o">=</span> <span class="n">linesplit</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">csq</span> <span class="o">=</span> <span class="n">linesplit</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">csq</span><span class="o">==</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">csq</span> <span class="o">=</span> <span class="s1">&#39;NULL&#39;</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">linesplit</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+        <span class="n">hum</span> <span class="o">=</span> <span class="n">linesplit</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span>
+        <span class="n">flashp</span> <span class="o">=</span> <span class="n">linesplit</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span>
+        <span class="n">txtdatetime</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">linesplit</span><span class="p">[</span><span class="mi">13</span><span class="p">],</span>
+            <span class="s1">&#39;%y%m</span><span class="si">%d</span><span class="s1">/%H%M%S&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>    
+        <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Error: Possible conversion mismatch &#39;</span> <span class="o">+</span> <span class="n">line</span>
+        <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">csq</span> <span class="o">!=</span> <span class="s1">&#39;NULL&#39;</span><span class="p">:</span>
+            <span class="n">df_data</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;ts&#39;</span><span class="p">:</span><span class="n">txtdatetime</span><span class="p">,</span><span class="s1">&#39;rain&#39;</span><span class="p">:</span><span class="n">rain</span><span class="p">,</span><span class="s1">&#39;temperature&#39;</span><span class="p">:</span><span class="n">temp</span><span class="p">,</span>
+            <span class="s1">&#39;humidity&#39;</span><span class="p">:</span><span class="n">hum</span><span class="p">,</span><span class="s1">&#39;battery1&#39;</span><span class="p">:</span><span class="n">batv1</span><span class="p">,</span><span class="s1">&#39;battery2&#39;</span><span class="p">:</span><span class="n">batv2</span><span class="p">,</span><span class="s1">&#39;csq&#39;</span><span class="p">:</span><span class="n">csq</span><span class="p">}]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df_data</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;ts&#39;</span><span class="p">:</span><span class="n">txtdatetime</span><span class="p">,</span><span class="s1">&#39;rain&#39;</span><span class="p">:</span><span class="n">rain</span><span class="p">,</span><span class="s1">&#39;temperature&#39;</span><span class="p">:</span><span class="n">temp</span><span class="p">,</span>
+            <span class="s1">&#39;humidity&#39;</span><span class="p">:</span><span class="n">hum</span><span class="p">,</span><span class="s1">&#39;battery1&#39;</span><span class="p">:</span><span class="n">batv1</span><span class="p">,</span><span class="s1">&#39;battery2&#39;</span><span class="p">:</span><span class="n">batv2</span><span class="p">}]</span>
+
+        <span class="n">df_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df_data</span><span class="p">)</span>
+        <span class="n">df_data</span> <span class="o">=</span> <span class="n">smsclass</span><span class="o">.</span><span class="n">DataTable</span><span class="p">(</span><span class="s1">&#39;rain_&#39;</span><span class="o">+</span><span class="n">msgname</span><span class="p">,</span><span class="n">df_data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df_data</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Error writing query string.&#39;</span><span class="p">,</span> 
+        <span class="k">return</span></div>
+
+
+
+<div class="viewcode-block" id="v3"><a class="viewcode-back" href="../../../gsm.smsparser2.html#gsm.smsparser2.rain.v3">[docs]</a><span class="k">def</span> <span class="nf">v3</span> <span class="p">(</span><span class="n">sms</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of parsing data of v3 message of rain.</span>
+
+<span class="sd">    :param sms: Dictionary of sms info.</span>
+<span class="sd">    :type sms: obj</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">       DataFrame: Dataframe output for success parsing and return</span>
+<span class="sd">       False if fails.</span>
+
+<span class="sd">    Example Output::</span>
+
+
+<span class="sd">                            battery1 battery2 csq humidity  rain temperature</span>
+<span class="sd">        ts</span>
+<span class="sd">        2018-04-26 13:30:58    null    null   15     null   0        null</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="n">line</span> <span class="o">=</span> <span class="n">sms</span><span class="o">.</span><span class="n">msg</span>
+    <span class="n">sender</span> <span class="o">=</span> <span class="n">sms</span><span class="o">.</span><span class="n">sim_num</span>
+    
+    <span class="c1">#msg = message</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;[^A-Z0-9,\/:\.\-]&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="n">line</span><span class="p">)</span>
+
+    <span class="nb">print</span> <span class="s1">&#39;Weather data: &#39;</span> <span class="o">+</span> <span class="n">line</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">9</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;,(?=$)&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="n">line</span><span class="p">)</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;(?&lt;=,)(?=(,|$))&quot;</span><span class="p">,</span><span class="s2">&quot;NULL&quot;</span><span class="p">,</span><span class="n">line</span><span class="p">)</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;(?&lt;=,)NULL(?=,)&quot;</span><span class="p">,</span><span class="s2">&quot;0.0&quot;</span><span class="p">,</span><span class="n">line</span><span class="p">)</span>
+    <span class="c1"># line = re.sub(&quot;(?&lt;=,).*$&quot;,&quot;NULL&quot;,line)</span>
+    <span class="nb">print</span> <span class="s2">&quot;line:&quot;</span><span class="p">,</span> <span class="n">line</span>
+
+    <span class="k">try</span><span class="p">:</span>
+    
+        <span class="n">logger_name</span> <span class="o">=</span> <span class="n">check_name_of_number</span><span class="p">(</span><span class="n">sender</span><span class="p">)</span>
+        <span class="n">logger_model</span> <span class="o">=</span> <span class="n">check_logger_model</span><span class="p">(</span><span class="n">logger_name</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="n">logger_name</span><span class="p">,</span><span class="n">logger_model</span>
+        <span class="k">if</span> <span class="n">logger_model</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">23</span><span class="p">,</span><span class="mi">24</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">26</span><span class="p">]:</span>
+            <span class="n">msgtable</span> <span class="o">=</span> <span class="n">logger_name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msgtable</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;G&#39;</span>
+        <span class="c1"># msgtable = check_name_of_number(sender)</span>
+        <span class="n">msgdatetime</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;\d{02}\/\d{02}\/\d{02},\d{02}:\d{02}:\d{02}&quot;</span><span class="p">,</span>
+            <span class="n">line</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">txtdatetime</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">msgdatetime</span><span class="p">,</span><span class="s1">&#39;%m/</span><span class="si">%d</span><span class="s1">/%y,%H:%M:%S&#39;</span><span class="p">)</span>
+        
+        <span class="n">txtdatetime</span> <span class="o">=</span> <span class="n">txtdatetime</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># data = items.group(3)</span>
+        <span class="n">rain</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="nb">print</span> <span class="n">line</span>
+
+        <span class="n">csq</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">8</span><span class="p">]</span>
+
+
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&gt;&gt; Error: Rain message format is not recognized&#39;</span>
+        <span class="nb">print</span> <span class="n">line</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&gt;&gt; Error: One of the values not correct&#39;</span>
+        <span class="nb">print</span> <span class="n">line</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&gt;&gt;Error: Weather message format unknown &#39;</span> <span class="o">+</span> <span class="n">line</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># query = (&quot;INSERT INTO rain_%s (ts,rain,csq) &quot;</span>
+        <span class="c1">#     &quot;VALUES (&#39;%s&#39;,%s,%s)&quot;) % (msgtable.lower(),txtdatetime,rain,csq)</span>
+        <span class="c1"># print query   </span>
+        <span class="k">if</span> <span class="n">csq</span> <span class="o">!=</span> <span class="s1">&#39;NULL&#39;</span><span class="p">:</span>
+            <span class="n">df_data</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;ts&#39;</span><span class="p">:</span><span class="n">txtdatetime</span><span class="p">,</span><span class="s1">&#39;rain&#39;</span><span class="p">:</span><span class="n">rain</span><span class="p">,</span><span class="s1">&#39;csq&#39;</span><span class="p">:</span><span class="n">csq</span><span class="p">}]</span>
+        <span class="k">else</span><span class="p">:</span>
+           <span class="n">df_data</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;ts&#39;</span><span class="p">:</span><span class="n">txtdatetime</span><span class="p">,</span><span class="s1">&#39;rain&#39;</span><span class="p">:</span><span class="n">rain</span><span class="p">}]</span>
+
+        <span class="n">df_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df_data</span><span class="p">)</span>
+        <span class="n">df_data</span> <span class="o">=</span> <span class="n">smsclass</span><span class="o">.</span><span class="n">DataTable</span><span class="p">(</span><span class="s1">&#39;rain_&#39;</span><span class="o">+</span><span class="n">msgtable</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="p">,</span><span class="n">df_data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df_data</span>         
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Error writing weather data to database. &#39;</span> <span class="o">+</span>  <span class="n">line</span>
+        <span class="k">return</span></div>
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

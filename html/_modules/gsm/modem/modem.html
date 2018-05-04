@@ -1,0 +1,542 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gsm.modem.modem &mdash; Central Server Documentation 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Central Server Documentation 1.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Central Server Documentation
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dynadb.html">dynadb package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gsm.html">gsm package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../volatile.html">volatile package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Central Server Documentation</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>gsm.modem.modem</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gsm.modem.modem</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">serial</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">messaging.sms</span> <span class="k">import</span> <span class="n">SmsDeliver</span> <span class="k">as</span> <span class="n">smsdeliver</span>
+<span class="kn">from</span> <span class="nn">messaging.sms</span> <span class="k">import</span> <span class="n">SmsSubmit</span> <span class="k">as</span> <span class="n">smssubmit</span>
+<span class="kn">import</span> <span class="nn">volatile.memory</span> <span class="k">as</span> <span class="nn">mem</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">timedelta</span> <span class="k">as</span> <span class="n">td</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">RPi.GPIO</span> <span class="k">as</span> <span class="nn">GPIO</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="nb">print</span> <span class="s2">&quot;Warning: RPi.GPIO module Skipping import&quot;</span>
+
+<div class="viewcode-block" id="ResetException"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.ResetException">[docs]</a><span class="k">class</span> <span class="nc">ResetException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="GsmSms"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmSms">[docs]</a><span class="k">class</span> <span class="nc">GsmSms</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">num</span><span class="p">,</span><span class="n">sender</span><span class="p">,</span><span class="n">data</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">num</span> <span class="o">=</span> <span class="n">num</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">simnum</span> <span class="o">=</span> <span class="n">sender</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span></div>
+
+<div class="viewcode-block" id="GsmModem"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmModem">[docs]</a><span class="k">class</span> <span class="nc">GsmModem</span><span class="p">:</span>
+
+    <span class="n">REPLY_TIMEOUT</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="n">SEND_INITIATE_REPLY_TIMEOUT</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="n">SENDING_REPLY_TIMEOUT</span> <span class="o">=</span> <span class="mi">60</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ser_port</span><span class="p">,</span> <span class="n">ser_baud</span><span class="p">,</span> <span class="n">pow_pin</span><span class="p">,</span> <span class="n">ring_pin</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ser_port</span> <span class="o">=</span> <span class="n">ser_port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ser_baud</span> <span class="o">=</span> <span class="n">ser_baud</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gsm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_serial</span><span class="p">()</span>
+
+        <span class="n">GPIO</span><span class="o">.</span><span class="n">setmode</span><span class="p">(</span><span class="n">GPIO</span><span class="o">.</span><span class="n">BOARD</span><span class="p">)</span>
+        <span class="n">GPIO</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">pow_pin</span><span class="p">,</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">OUT</span><span class="p">)</span>
+        <span class="n">GPIO</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">pow_pin</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">GPIO</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">ring_pin</span><span class="p">,</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">IN</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pow_pin</span> <span class="o">=</span> <span class="n">pow_pin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ring_pin</span> <span class="o">=</span> <span class="n">ring_pin</span>
+        
+<div class="viewcode-block" id="GsmModem.at_cmd"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmModem.at_cmd">[docs]</a>    <span class="k">def</span> <span class="nf">at_cmd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">expected_reply</span> <span class="o">=</span> <span class="s1">&#39;OK&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends a command &#39;cmd&#39; to GSM Module</span>
+<span class="sd">        Returns the reply of the module</span>
+<span class="sd">        Usage: str = gsm_cmd()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No cmd given&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">flushInput</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">flushOutput</span><span class="p">()</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cmd</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">expected_reply</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> 
+                <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">now</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">REPLY_TIMEOUT</span><span class="p">):</span>
+                <span class="n">a</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">())</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">now</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">REPLY_TIMEOUT</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="s1">&#39;&gt;&gt; Error: GSM Unresponsive&#39;</span>
+                <span class="n">except_str</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&gt;&gt; Raising exception to reset code &quot;</span>
+                    <span class="s2">&quot;from GSM module reset&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ResetException</span><span class="p">(</span><span class="n">except_str</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s2">&quot;Modem: ERROR&quot;</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">a</span>
+        <span class="k">except</span> <span class="n">serial</span><span class="o">.</span><span class="n">SerialException</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;NO SERIAL COMMUNICATION (gsm_cmd)&quot;</span></div>
+            <span class="c1"># RunSenslopeServer(gsm_network)</span>
+
+<div class="viewcode-block" id="GsmModem.init_serial"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmModem.init_serial">[docs]</a>    <span class="k">def</span> <span class="nf">init_serial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="s1">&#39;Connecting to GSM modem at&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ser_port</span>
+
+        <span class="n">gsm</span> <span class="o">=</span> <span class="n">serial</span><span class="o">.</span><span class="n">Serial</span><span class="p">()</span>
+        <span class="n">gsm</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ser_port</span>
+        <span class="n">gsm</span><span class="o">.</span><span class="n">baudrate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ser_baud</span>
+        <span class="n">gsm</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">gsm</span><span class="o">.</span><span class="n">isOpen</span><span class="p">()</span> <span class="o">==</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">gsm</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">gsm</span></div>
+
+        
+<div class="viewcode-block" id="GsmModem.set_defaults"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmModem.set_defaults">[docs]</a>    <span class="k">def</span> <span class="nf">set_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;AT</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;Switching to no-echo mode&quot;</span><span class="p">,</span>
+            <span class="nb">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">at_cmd</span><span class="p">(</span><span class="s1">&#39;ATE0&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="s2">&quot;Switching to PDU mode&quot;</span> 
+            <span class="nb">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">at_cmd</span><span class="p">(</span><span class="s1">&#39;AT+CMGF=0&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="s2">&quot;Disabling unsolicited CMTI&quot;</span><span class="p">,</span>
+            <span class="nb">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">at_cmd</span><span class="p">(</span><span class="s1">&#39;AT+CNMI=2,0,0,0,0&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="GsmModem.get_all_sms"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmModem.get_all_sms">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_sms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">):</span>
+        <span class="n">allmsgs</span> <span class="o">=</span> <span class="s1">&#39;d&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">at_cmd</span><span class="p">(</span><span class="s1">&#39;AT+CMGL=4&#39;</span><span class="p">)</span>
+        <span class="c1"># print allmsgs.replace(&#39;\r&#39;,&#39;@&#39;).replace(&#39;\n&#39;,&#39;$&#39;)</span>
+        <span class="c1"># allmsgs = allmsgs.replace(&quot;\r\nOK\r\n&quot;,&#39;&#39;).split(&quot;+CMGL&quot;)[1:]</span>
+
+        <span class="n">allmsgs</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;(?&lt;=\+CMGL:).+</span><span class="se">\r\n</span><span class="s2">.+(?=</span><span class="se">\n</span><span class="s2">*</span><span class="se">\r\n\r\n</span><span class="s2">)&quot;</span><span class="p">,</span><span class="n">allmsgs</span><span class="p">)</span>
+        <span class="c1">#if allmsgs:</span>
+        <span class="c1">#    temp = allmsgs.pop(0) #removes &quot;=ALL&quot;</span>
+        <span class="n">msglist</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">allmsgs</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">pdu</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">r&#39;[0-9A-F]{20,}&#39;</span><span class="p">,</span><span class="n">msg</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="c1"># particular msg may be some extra strip of string </span>
+                <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; Error: cannot find pdu text&quot;</span><span class="p">,</span> <span class="n">msg</span>
+                <span class="c1"># log_error(&quot;wrong construction\n&quot;+msg[0])</span>
+                <span class="k">continue</span>
+
+            <span class="n">smsdata</span> <span class="o">=</span> <span class="n">smsdeliver</span><span class="p">(</span><span class="n">pdu</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
+
+            <span class="n">smsdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manage_multi_messages</span><span class="p">(</span><span class="n">smsdata</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">smsdata</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">txtnum</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">r&#39;(?&lt;= )[0-9]{1,2}(?=,)&#39;</span><span class="p">,</span><span class="n">msg</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="c1"># particular msg may be some extra strip of string </span>
+                <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; Error: message may not have correct construction&quot;</span><span class="p">,</span> <span class="n">msg</span>
+                <span class="c1"># log_error(&quot;wrong construction\n&quot;+msg[0])</span>
+                <span class="k">continue</span>
+            
+            <span class="n">txtdatetimeStr</span> <span class="o">=</span> <span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">td</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+
+            <span class="n">txtdatetimeStr</span> <span class="o">=</span> <span class="n">txtdatetimeStr</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+
+    <span class="c1">#        print smsdata[&#39;text&#39;]</span>
+            <span class="k">try</span><span class="p">:</span>        
+                <span class="n">smsItem</span> <span class="o">=</span> <span class="n">GsmSms</span><span class="p">(</span><span class="n">txtnum</span><span class="p">,</span> <span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;number&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">),</span> 
+                    <span class="nb">str</span><span class="p">(</span><span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]),</span> <span class="n">txtdatetimeStr</span><span class="p">)</span>
+
+                <span class="n">sms_msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sms_msg</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">30</span><span class="p">:</span>
+                    <span class="nb">print</span> <span class="n">sms_msg</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span> <span class="n">sms_msg</span><span class="p">[:</span><span class="mi">10</span><span class="p">],</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span> <span class="n">sms_msg</span><span class="p">[</span><span class="o">-</span><span class="mi">20</span><span class="p">:]</span>
+
+                <span class="n">msglist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">smsItem</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; Unknown character error. Skipping message&quot;</span>
+                <span class="k">continue</span>
+
+        <span class="k">return</span> <span class="n">msglist</span></div>
+
+<div class="viewcode-block" id="GsmModem.delete_sms"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmModem.delete_sms">[docs]</a>    <span class="k">def</span> <span class="nf">delete_sms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            **Description:**</span>
+<span class="sd">              -The delete message from gms is a function that delete messages in the gsm module</span>
+<span class="sd">             </span>
+<span class="sd">            :parameters: N/A</span>
+<span class="sd">            :returns: N/A</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&gt;&gt; Deleting all read messages&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">module</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">at_cmd</span><span class="p">(</span><span class="s2">&quot;AT+CMGD=0,2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">module</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">at_cmd</span><span class="p">(</span><span class="s2">&quot;AT+CMGDA=1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown module type&quot;</span><span class="p">)</span>
+            
+            <span class="nb">print</span> <span class="s1">&#39;OK&#39;</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Error deleting messages&#39;</span></div>
+
+<div class="viewcode-block" id="GsmModem.csq"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmModem.csq">[docs]</a>    <span class="k">def</span> <span class="nf">csq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">csq_reply</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">at_cmd</span><span class="p">(</span><span class="s2">&quot;AT+CSQ&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">csq_val</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;(?&lt;=: )\d{1,2}(?=,)&quot;</span><span class="p">,</span><span class="n">csq_reply</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">csq_val</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="GsmModem.reset"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmModem.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; Resetting GSM Module ...&quot;</span><span class="p">,</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">at_cmd</span><span class="p">(</span><span class="s2">&quot;AT+CPOWD=1&quot;</span><span class="p">,</span> <span class="s2">&quot;NORMAL POWER DOWN&quot;</span><span class="p">)</span>
+            <span class="n">GPIO</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pow_pin</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">GPIO</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pow_pin</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">GPIO</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pow_pin</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="nb">print</span> <span class="s1">&#39;done&#39;</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+<div class="viewcode-block" id="GsmModem.manage_multi_messages"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmModem.manage_multi_messages">[docs]</a>    <span class="k">def</span> <span class="nf">manage_multi_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smsdata</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;ref&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">smsdata</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">smsdata</span>
+
+        <span class="n">sms_ref</span> <span class="o">=</span> <span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;ref&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># get/set multipart_sms_list</span>
+        <span class="n">mc</span> <span class="o">=</span> <span class="n">mem</span><span class="o">.</span><span class="n">get_handle</span><span class="p">()</span>
+        <span class="n">multipart_sms</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multipart_sms&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">multipart_sms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">multipart_sms</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="nb">print</span> <span class="s2">&quot;multipart_sms in None&quot;</span>
+
+        <span class="k">if</span> <span class="n">sms_ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">multipart_sms</span><span class="p">:</span>
+            <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span>
+            <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">][</span><span class="s1">&#39;number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;number&#39;</span><span class="p">]</span>
+            <span class="c1"># multipart_sms[sms_ref][&#39;cnt&#39;] = smsdata[&#39;cnt&#39;]</span>
+            <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">][</span><span class="s1">&#39;seq_rec&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">][</span><span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;seq&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span>
+        <span class="nb">print</span> <span class="s2">&quot;Sequence no: </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;seq&#39;</span><span class="p">],</span><span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;cnt&#39;</span><span class="p">])</span>
+        <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">][</span><span class="s1">&#39;seq_rec&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">smsdata_complete</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">][</span><span class="s1">&#39;seq_rec&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;cnt&#39;</span><span class="p">]:</span>
+            <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">][</span><span class="s1">&#39;text&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">smsdata</span><span class="p">[</span><span class="s1">&#39;cnt&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">][</span><span class="s1">&#39;text&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="c1"># print multipart_sms[sms_ref][&#39;text&#39;]</span>
+
+            <span class="n">smsdata_complete</span> <span class="o">=</span> <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">]</span>
+
+            <span class="k">del</span> <span class="n">multipart_sms</span><span class="p">[</span><span class="n">sms_ref</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;Incomplete message&quot;</span>
+
+        <span class="n">mc</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;multipart_sms&quot;</span><span class="p">,</span> <span class="n">multipart_sms</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">smsdata_complete</span></div>
+
+<div class="viewcode-block" id="GsmModem.count_msg"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmModem.count_msg">[docs]</a>    <span class="k">def</span> <span class="nf">count_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the # of SMS messages stored in GSM modem.</span>
+<span class="sd">        Usage: c = count_msg()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">at_cmd</span><span class="p">(</span><span class="s2">&quot;AT+CPMS?&quot;</span><span class="p">)</span>
+            
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="nb">print</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&gt;&gt; Received&#39;</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="s1">&#39;message/s; CSQ:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">csq</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">c</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;count_msg b = &#39;</span><span class="p">,</span><span class="n">b</span>
+                <span class="c1"># log_error(b)</span>
+                <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span>                
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+                    
+                <span class="c1">##if GSM sent blank data maybe GSM is inactive</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; ValueError:&#39;</span>
+                <span class="nb">print</span> <span class="n">b</span>
+                <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Retryring message reading&#39;</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">2</span></div>
+
+<div class="viewcode-block" id="GsmModem.send_msg"><a class="viewcode-back" href="../../../gsm.modem.html#gsm.modem.modem.GsmModem.send_msg">[docs]</a>    <span class="k">def</span> <span class="nf">send_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">number</span><span class="p">,</span> <span class="n">simulate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends a command &#39;cmd&#39; to GSM Module</span>
+<span class="sd">        Returns the reply of the module</span>
+<span class="sd">        Usage: str = gsm_cmd()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># under development</span>
+        <span class="c1"># return</span>
+        <span class="c1"># simulate sending success</span>
+        <span class="c1"># False =&gt; sucess</span>
+        <span class="k">if</span> <span class="n">simulate</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">0.15</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pdulist</span> <span class="o">=</span> <span class="n">smssubmit</span><span class="p">(</span><span class="n">number</span><span class="p">,</span><span class="n">msg</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;latin&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">to_pdu</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;Error in pdu conversion. Skipping message sending&quot;</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="c1"># print &quot;pdulen&quot;, len(pdulist)</span>
+        <span class="nb">print</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">MSG:&quot;</span><span class="p">,</span> <span class="n">msg</span> 
+        <span class="nb">print</span> <span class="s2">&quot;NUM:&quot;</span><span class="p">,</span> <span class="n">number</span>
+
+        <span class="n">parts</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pdulist</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">1</span>
+                
+        <span class="k">for</span> <span class="n">pdu</span> <span class="ow">in</span> <span class="n">pdulist</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">preamble</span> <span class="o">=</span> <span class="s2">&quot;AT+CMGS=</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pdu</span><span class="o">.</span><span class="n">length</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">preamble</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;&gt;&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> 
+                <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">now</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEND_INITIATE_REPLY_TIMEOUT</span><span class="p">):</span>
+                <span class="n">a</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">())</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                <span class="nb">print</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">now</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEND_INITIATE_REPLY_TIMEOUT</span> <span class="ow">or</span> 
+                <span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>  
+                <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Error: GSM Unresponsive at finding &gt;&#39;</span>
+                <span class="nb">print</span> <span class="n">a</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">,</span>
+            
+            <span class="n">a</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pdu</span><span class="o">.</span><span class="n">pdu</span><span class="o">+</span><span class="nb">chr</span><span class="p">(</span><span class="mi">26</span><span class="p">))</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;OK&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> 
+                <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">now</span> <span class="o">+</span> <span class="mi">60</span><span class="p">):</span>
+                    <span class="n">a</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gsm</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">())</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                    <span class="nb">print</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span>
+
+            <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">SENDING_REPLY_TIMEOUT</span> <span class="o">&gt;</span> <span class="n">now</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Error: timeout reached&#39;</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Error: GSM reported ERROR in SMS reading&#39;</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; Part </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">: Message sent!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">count</span><span class="p">,</span><span class="n">parts</span><span class="p">)</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                    
+        <span class="k">return</span> <span class="mi">0</span></div></div>
+        
+
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

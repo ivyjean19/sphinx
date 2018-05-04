@@ -1,0 +1,381 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>volatile.static &mdash; Central Server Documentation 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Central Server Documentation 1.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Central Server Documentation
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dynadb.html">dynadb package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gsm.html">gsm package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../volatile.html">volatile package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Central Server Documentation</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>volatile.static</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for volatile.static</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">memory</span>
+<span class="kn">import</span> <span class="nn">dynadb.db</span> <span class="k">as</span> <span class="nn">dbio</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt</span>
+<span class="kn">import</span> <span class="nn">pandas.io.sql</span> <span class="k">as</span> <span class="nn">psql</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<div class="viewcode-block" id="get_db_dataframe"><a class="viewcode-back" href="../../volatile.html#volatile.static.get_db_dataframe">[docs]</a><span class="k">def</span> <span class="nf">get_db_dataframe</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">db</span><span class="p">,</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">dbio</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">psql</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+        <span class="c1"># df.columns = [&#39;ts&#39;,&#39;id&#39;,&#39;x&#39;,&#39;y&#39;,&#39;z&#39;,&#39;m&#39;]</span>
+        <span class="c1"># change ts column to datetime</span>
+        <span class="c1"># df.ts = pd.to_datetime(df.ts)</span>
+
+        <span class="n">db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">df</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;Exception detected in accessing database&quot;</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">psql</span><span class="o">.</span><span class="n">DatabaseError</span><span class="p">:</span>
+    	<span class="nb">print</span> <span class="s2">&quot;Error getting query </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    	<span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="set_mysql_tables"><a class="viewcode-back" href="../../volatile.html#volatile.static.set_mysql_tables">[docs]</a><span class="k">def</span> <span class="nf">set_mysql_tables</span><span class="p">(</span><span class="n">mc</span><span class="p">):</span>
+	<span class="n">tables</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sites&#39;</span><span class="p">,</span><span class="s1">&#39;tsm_sensors&#39;</span><span class="p">,</span><span class="s1">&#39;loggers&#39;</span><span class="p">,</span><span class="s1">&#39;accelerometers&#39;</span><span class="p">]</span>
+
+	<span class="nb">print</span> <span class="s1">&#39;Setting dataframe tables to memory&#39;</span>
+	<span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+		<span class="nb">print</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">),</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">get_db_dataframe</span><span class="p">(</span><span class="s2">&quot;select * from </span><span class="si">%s</span><span class="s2">;&quot;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="n">df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">continue</span>
+
+		<span class="n">mc</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;df_&#39;</span><span class="o">+</span><span class="n">key</span><span class="p">,</span><span class="n">df</span><span class="p">)</span>
+
+		<span class="c1"># special configuration</span>
+		<span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;sites&#39;</span><span class="p">:</span>
+			<span class="n">mc</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="o">+</span><span class="s1">&#39;_dict&#39;</span><span class="p">,</span><span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;site_code&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+
+	<span class="nb">print</span> <span class="s1">&#39; ... done&#39;</span></div>
+
+<div class="viewcode-block" id="get_mobiles"><a class="viewcode-back" href="../../volatile.html#volatile.static.get_mobiles">[docs]</a><span class="k">def</span> <span class="nf">get_mobiles</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">host</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **Description:**</span>
+<span class="sd">          -The get mobile sim nums is a function that get the number of the loggers or users in the database.</span>
+<span class="sd">         </span>
+<span class="sd">        :param table: loggers or users table.</span>
+<span class="sd">        :param host: host name of the number and  **Default** to **None**</span>
+<span class="sd">        :type table: str</span>
+<span class="sd">        :type host: str </span>
+<span class="sd">        :returns:  **mobile number** (*int*) - mobile number of user or logger</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">memory</span><span class="o">.</span><span class="n">get_handle</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">host</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No host value given for mobile number&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+        <span class="n">is_reset_variables</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">reset_variables</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">is_reset_variables</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">table</span> <span class="o">==</span> <span class="s1">&#39;loggers&#39;</span><span class="p">:</span>
+
+        <span class="n">logger_mobile_sim_nums</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;logger_mobile_sim_nums&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">logger_mobile_sim_nums</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_reset_variables</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">logger_mobile_sim_nums</span>
+
+        <span class="nb">print</span> <span class="s2">&quot;Force reset logger mobiles in memory&quot;</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;SELECT t1.mobile_id, t1.sim_num, t1.gsm_id &quot;</span>
+            <span class="s2">&quot;FROM logger_mobile AS t1 &quot;</span>
+            <span class="s2">&quot;LEFT OUTER JOIN logger_mobile AS t2 &quot;</span>
+            <span class="s2">&quot;ON t1.sim_num = t2.sim_num &quot;</span>
+            <span class="s2">&quot;AND (t1.date_activated &lt; t2.date_activated &quot;</span>
+            <span class="s2">&quot;OR (t1.date_activated = t2.date_activated &quot;</span>
+            <span class="s2">&quot;AND t1.mobile_id &lt; t2.mobile_id)) &quot;</span>
+            <span class="s2">&quot;WHERE t2.sim_num IS NULL and t1.sim_num is not null&quot;</span><span class="p">)</span>
+
+        <span class="n">nums</span> <span class="o">=</span> <span class="n">dbio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="s1">&#39;get_mobile_sim_nums&#39;</span><span class="p">,</span> <span class="n">host</span><span class="p">)</span>
+
+        <span class="n">logger_mobile_sim_nums</span> <span class="o">=</span> <span class="p">{</span><span class="n">sim_num</span><span class="p">:</span> <span class="n">mobile_id</span> <span class="k">for</span> <span class="p">(</span><span class="n">mobile_id</span><span class="p">,</span> <span class="n">sim_num</span><span class="p">,</span> 
+            <span class="n">gsm_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">nums</span><span class="p">}</span>
+        <span class="n">mc</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;logger_mobile_sim_nums&quot;</span><span class="p">,</span> <span class="n">logger_mobile_sim_nums</span><span class="p">)</span>
+
+        <span class="n">logger_mobile_def_gsm_id</span> <span class="o">=</span> <span class="p">{</span><span class="n">mobile_id</span><span class="p">:</span> <span class="n">gsm_id</span> <span class="k">for</span> <span class="p">(</span><span class="n">mobile_id</span><span class="p">,</span> <span class="n">sim_num</span><span class="p">,</span> 
+            <span class="n">gsm_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">nums</span><span class="p">}</span>
+        <span class="n">mc</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;logger_mobile_def_gsm_id&quot;</span><span class="p">,</span> <span class="n">logger_mobile_def_gsm_id</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">table</span> <span class="o">==</span> <span class="s1">&#39;users&#39;</span><span class="p">:</span>
+
+        <span class="n">user_mobile_sim_nums</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;user_mobile_sim_nums&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">user_mobile_sim_nums</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_reset_variables</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">user_mobile_sim_nums</span>
+
+        <span class="nb">print</span> <span class="s2">&quot;Force reset user mobiles in memory&quot;</span>
+        
+        <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;select mobile_id, sim_num, gsm_id from user_mobile&quot;</span>
+
+        <span class="n">nums</span> <span class="o">=</span> <span class="n">dbio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="s1">&#39;get_mobile_sim_nums&#39;</span><span class="p">,</span> <span class="n">host</span><span class="p">)</span>
+
+        <span class="n">user_mobile_sim_nums</span> <span class="o">=</span> <span class="p">{</span><span class="n">sim_num</span><span class="p">:</span> <span class="n">mobile_id</span> <span class="k">for</span> <span class="p">(</span><span class="n">mobile_id</span><span class="p">,</span> <span class="n">sim_num</span><span class="p">,</span> 
+            <span class="n">gsm_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">nums</span><span class="p">}</span>
+        <span class="n">mc</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;user_mobile_sim_nums&quot;</span><span class="p">,</span><span class="n">user_mobile_sim_nums</span><span class="p">)</span>
+
+        <span class="n">user_mobile_def_gsm_id</span> <span class="o">=</span> <span class="p">{</span><span class="n">mobile_id</span><span class="p">:</span> <span class="n">gsm_id</span> <span class="k">for</span> <span class="p">(</span><span class="n">mobile_id</span><span class="p">,</span> <span class="n">sim_num</span><span class="p">,</span> 
+            <span class="n">gsm_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">nums</span><span class="p">}</span>
+        <span class="n">mc</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;user_mobile_def_gsm_id&quot;</span><span class="p">,</span> <span class="n">user_mobile_def_gsm_id</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;Error: table&#39;</span><span class="p">,</span> <span class="n">table</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">nums</span></div>
+
+<div class="viewcode-block" id="get_surficial_markers"><a class="viewcode-back" href="../../volatile.html#volatile.static.get_surficial_markers">[docs]</a><span class="k">def</span> <span class="nf">get_surficial_markers</span><span class="p">(</span><span class="n">host</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">from_memory</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">memory</span><span class="o">.</span><span class="n">get_handle</span><span class="p">()</span>
+    <span class="n">sc</span> <span class="o">=</span> <span class="n">memory</span><span class="o">.</span><span class="n">server_config</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">from_memory</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;surficial_markers&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">host</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;Host defaults to datadb&quot;</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;resource&quot;</span><span class="p">][</span><span class="s2">&quot;datadb&quot;</span><span class="p">]</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;select m2.marker_id, m3.marker_name, m4.site_id from &quot;</span>
+        <span class="s2">&quot;(select max(history_id) as history_id, &quot;</span>
+        <span class="s2">&quot;marker_id from marker_history as m1 &quot;</span>
+        <span class="s2">&quot;group by m1.marker_id &quot;</span>
+        <span class="s2">&quot;) as m2 &quot;</span>
+        <span class="s2">&quot;inner join marker_names as m3 &quot;</span>
+        <span class="s2">&quot;on m2.history_id = m3.history_id &quot;</span>
+        <span class="s2">&quot;inner join markers as m4 &quot;</span>
+        <span class="s2">&quot;on m2.marker_id = m4.marker_id &quot;</span><span class="p">)</span>
+
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">dbio</span><span class="o">.</span><span class="n">df_engine</span><span class="p">(</span><span class="n">host</span><span class="p">)</span>
+    <span class="n">surficial_markers</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">engine</span><span class="p">)</span>
+    <span class="n">mc</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;surficial_markers&quot;</span><span class="p">,</span> <span class="n">surficial_markers</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">surficial_markers</span></div>
+
+<div class="viewcode-block" id="get_surficial_parser_reply_messages"><a class="viewcode-back" href="../../volatile.html#volatile.static.get_surficial_parser_reply_messages">[docs]</a><span class="k">def</span> <span class="nf">get_surficial_parser_reply_messages</span><span class="p">():</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;select * from surficial_parser_reply_messages&quot;</span>
+    
+    <span class="n">df</span> <span class="o">=</span> <span class="n">get_db_dataframe</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;msg_id&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../volatile.html#volatile.static.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+
+    <span class="nb">print</span> <span class="n">dt</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>	
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">memory</span><span class="o">.</span><span class="n">get_handle</span><span class="p">()</span>
+    <span class="n">sc</span> <span class="o">=</span> <span class="n">memory</span><span class="o">.</span><span class="n">server_config</span><span class="p">()</span>
+
+    <span class="nb">print</span> <span class="s2">&quot;Reset alergenexec&quot;</span><span class="p">,</span>
+    <span class="n">mc</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;alertgenexec&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;done&quot;</span>
+
+    <span class="nb">print</span> <span class="s2">&quot;Set static tables to memory&quot;</span><span class="p">,</span>
+    <span class="k">try</span><span class="p">:</span>
+    	<span class="n">set_mysql_tables</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+    	<span class="nb">print</span> <span class="s2">&quot;&gt;&gt; KeyError&quot;</span>
+    <span class="nb">print</span> <span class="s2">&quot;done&quot;</span>
+
+    <span class="nb">print</span> <span class="s2">&quot;Set mobile numbers to memory&quot;</span><span class="p">,</span>
+    <span class="n">mobiles_host</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s2">&quot;resource&quot;</span><span class="p">][</span><span class="s2">&quot;mobile_nums_db&quot;</span><span class="p">]</span>
+    <span class="n">get_mobiles</span><span class="p">(</span><span class="s2">&quot;loggers&quot;</span><span class="p">,</span> <span class="n">mobiles_host</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+    <span class="n">get_mobiles</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="n">mobiles_host</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;done&quot;</span>
+
+    <span class="nb">print</span> <span class="s2">&quot;Set surficial_markers to memory&quot;</span><span class="p">,</span> 
+    <span class="n">get_surficial_markers</span><span class="p">(</span><span class="n">from_memory</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;done&quot;</span>
+
+    <span class="nb">print</span> <span class="s2">&quot;Set surficial_parser_reply_messages&quot;</span><span class="p">,</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">get_surficial_parser_reply_messages</span><span class="p">()</span>
+    <span class="n">mc</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;surficial_parser_reply_messages&quot;</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;done&quot;</span></div>
+	
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

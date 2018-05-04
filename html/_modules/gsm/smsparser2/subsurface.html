@@ -1,0 +1,704 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gsm.smsparser2.subsurface &mdash; Central Server Documentation 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Central Server Documentation 1.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Central Server Documentation
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dynadb.html">dynadb package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gsm.html">gsm package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../volatile.html">volatile package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Central Server Documentation</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>gsm.smsparser2.subsurface</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gsm.smsparser2.subsurface</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span><span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">dynadb.db</span> <span class="k">as</span> <span class="nn">dynadb</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt</span>
+<span class="kn">import</span> <span class="nn">smsclass</span>
+
+
+<span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">,</span><span class="s1">&#39;timestamp&#39;</span><span class="p">,</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;msgid&#39;</span><span class="p">,</span> <span class="s1">&#39;mval1&#39;</span><span class="p">,</span> <span class="s1">&#39;mval2&#39;</span><span class="p">]</span>
+
+<span class="n">prevdatetime</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="s1">&#39;0&#39;</span><span class="p">]</span>
+<span class="n">backupGID</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="s1">&#39;0&#39;</span><span class="p">]</span>
+<span class="n">tempbuff</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="s1">&#39;0&#39;</span><span class="p">]</span>
+<span class="n">temprawlist</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">buff</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">SOMS</span><span class="o">=</span><span class="p">[]</span>
+
+<div class="viewcode-block" id="v1"><a class="viewcode-back" href="../../../gsm.smsparser2.html#gsm.smsparser2.subsurface.v1">[docs]</a><span class="k">def</span> <span class="nf">v1</span><span class="p">(</span><span class="n">sms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of parsing version 1 subsurface data.</span>
+<span class="sd">      </span>
+<span class="sd">    # :param sms: Dictionary of sms info.</span>
+<span class="sd">    # :type sms: obj</span>
+<span class="sd">    Args:</span>
+<span class="sd">        sms (obj): Dictionary of sms info.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">       DataFrame: Dataframe output for success parsing and return</span>
+<span class="sd">       False if fails.</span>
+
+<span class="sd">    Example Output::</span>
+<span class="sd">                           </span>
+<span class="sd">                             node_id  xval  yval  zval</span>
+<span class="sd">        ts</span>
+<span class="sd">        2018-04-30 16:32:00        1   991    41    28</span>
+<span class="sd">        2018-04-30 16:32:00        2   964    17   109</span>
+<span class="sd">        2018-04-30 16:32:00        3  1015    20   -39</span>
+<span class="sd">        2018-04-30 16:32:00        4  1001    11    -2</span>
+<span class="sd">        2018-04-30 16:32:00        5   971     6    50</span>
+<span class="sd">        2018-04-30 16:32:00        6 -3015   106  -109</span>
+<span class="sd">        2018-04-30 16:32:00        7  1013    30     3</span>
+<span class="sd">        2018-04-30 16:32:00        8  1008     4    32</span>
+<span class="sd">        2018-04-30 16:32:00        9  1001    41     3                      </span>
+<span class="sd">        ts                    mval1  node_id</span>
+<span class="sd">        2018-04-30 16:32:00   2394        1</span>
+<span class="sd">        2018-04-30 16:32:00   2446        2</span>
+<span class="sd">        2018-04-30 16:32:00   2677        3</span>
+<span class="sd">        2018-04-30 16:32:00   2779        4</span>
+<span class="sd">        2018-04-30 16:32:00   2691        5</span>
+<span class="sd">        2018-04-30 16:32:00   2480        6</span>
+<span class="sd">        2018-04-30 16:32:00   2657        7</span>
+<span class="sd">        2018-04-30 16:32:00   2954        8</span>
+<span class="sd">        2018-04-30 16:32:00   2464        9</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="n">data</span> <span class="o">=</span> <span class="n">sms</span><span class="o">.</span><span class="n">msg</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;DUE&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+   
+    <span class="n">tsm_name</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+    <span class="nb">print</span> <span class="s1">&#39;SITE: &#39;</span> <span class="o">+</span> <span class="n">tsm_name</span>
+    <span class="c1">##msgdata = line[5:len(line)-11] #data is 6th char, last 10 char are date</span>
+    <span class="n">msgdata</span> <span class="o">=</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">))[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="nb">print</span> <span class="s1">&#39;raw data: &#39;</span> <span class="o">+</span> <span class="n">msgdata</span>
+    <span class="c1">#getting date and time</span>
+    <span class="c1">#msgdatetime = line[-10:]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">))[</span><span class="mi">2</span><span class="p">][:</span><span class="mi">10</span><span class="p">]</span>
+        <span class="nb">print</span> <span class="s1">&#39;date &amp; time: &#39;</span> <span class="o">+</span> <span class="n">timestamp</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Date and time defaults to SMS not sensor data&#39;</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">sms</span><span class="o">.</span><span class="n">ts</span>
+
+    <span class="c1"># col_list = cfg.get(&quot;Misc&quot;,&quot;AdjustColumnTimeOf&quot;).split(&#39;,&#39;)</span>
+    <span class="k">if</span> <span class="n">tsm_name</span> <span class="o">==</span> <span class="s1">&#39;PUGB&#39;</span><span class="p">:</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">sms</span><span class="o">.</span><span class="n">ts</span>
+        <span class="nb">print</span> <span class="s2">&quot;date &amp; time adjusted &quot;</span> <span class="o">+</span> <span class="n">timestamp</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span>
+            <span class="s1">&#39;%y%m</span><span class="si">%d</span><span class="s1">%H%M&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:00&#39;</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="s1">&#39;date &amp; time no change&#39;</span>
+        
+    <span class="n">dlen</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">msgdata</span><span class="p">)</span> <span class="c1">#checks if data length is divisible by 15</span>
+    <span class="c1">#print &#39;data length: %d&#39; %dlen</span>
+    <span class="n">nodenum</span> <span class="o">=</span> <span class="n">dlen</span><span class="o">/</span><span class="mi">15</span>
+    <span class="c1">#print &#39;number of nodes: %d&#39; %nodenum</span>
+    <span class="k">if</span> <span class="n">dlen</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;Error: There is NO data!&#39;</span>
+        <span class="k">return</span> 
+    <span class="k">elif</span><span class="p">((</span><span class="n">dlen</span> <span class="o">%</span> <span class="mi">15</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="c1">#print &#39;Data has correct length!&#39;</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">dlen</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;Warning: Excess data will be ignored!&#39;</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">nodenum</span><span class="o">*</span><span class="mi">15</span>
+        
+    <span class="n">outl_tilt</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">outl_soms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">try</span><span class="p">:</span>    
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">valid</span><span class="p">:</span>
+            <span class="c1">#NODE ID</span>
+            <span class="c1">#parsed msg.data - NODE ID:</span>
+            <span class="n">node_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s1">&#39;0x&#39;</span> <span class="o">+</span> <span class="n">msgdata</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">],</span><span class="mi">16</span><span class="p">)</span>
+            <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span>
+            
+            <span class="c1">#X VALUE</span>
+            <span class="c1">#parsed msg.data - TEMPX VALUE:</span>
+            <span class="n">tempx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s1">&#39;0x&#39;</span> <span class="o">+</span> <span class="n">msgdata</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">3</span><span class="p">],</span><span class="mi">16</span><span class="p">)</span>
+            <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">3</span>
+            
+            <span class="c1">#Y VALUE</span>
+            <span class="c1">#parsed msg.data - TEMPY VALUE:</span>
+            <span class="n">tempy</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s1">&#39;0x&#39;</span> <span class="o">+</span> <span class="n">msgdata</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">3</span><span class="p">],</span><span class="mi">16</span><span class="p">)</span>
+            <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">3</span>
+            
+            <span class="c1">#Z VALUE</span>
+            <span class="c1">#parsed msg.data - ZVALUE:</span>
+            <span class="n">tempz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s1">&#39;0x&#39;</span> <span class="o">+</span> <span class="n">msgdata</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">3</span><span class="p">],</span><span class="mi">16</span><span class="p">)</span>
+            <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">3</span>
+            
+            <span class="c1">#M VALUE</span>
+            <span class="c1">#parsed msg.data - TEMPF VALUE:</span>
+            <span class="n">tempf</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s1">&#39;0x&#39;</span> <span class="o">+</span> <span class="n">msgdata</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">],</span><span class="mi">16</span><span class="p">)</span>
+            <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span>
+            
+            <span class="n">valueX</span> <span class="o">=</span> <span class="n">tempx</span>
+            <span class="k">if</span> <span class="n">valueX</span> <span class="o">&gt;</span> <span class="mi">1024</span><span class="p">:</span>
+                <span class="n">valueX</span> <span class="o">=</span> <span class="n">tempx</span> <span class="o">-</span> <span class="mi">4096</span>
+
+            <span class="n">valueY</span> <span class="o">=</span> <span class="n">tempy</span>
+            <span class="k">if</span> <span class="n">valueY</span> <span class="o">&gt;</span> <span class="mi">1024</span><span class="p">:</span>
+                <span class="n">valueY</span> <span class="o">=</span> <span class="n">tempy</span> <span class="o">-</span> <span class="mi">4096</span>
+
+            <span class="n">valueZ</span> <span class="o">=</span> <span class="n">tempz</span>
+            <span class="k">if</span> <span class="n">valueZ</span> <span class="o">&gt;</span> <span class="mi">1024</span><span class="p">:</span>
+                <span class="n">valueZ</span> <span class="o">=</span> <span class="n">tempz</span> <span class="o">-</span> <span class="mi">4096</span>
+
+            <span class="n">valueF</span> <span class="o">=</span> <span class="n">tempf</span> <span class="c1">#is this the M VALUE?</span>
+
+
+            <span class="n">tsm_name</span><span class="o">=</span><span class="n">tsm_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">line_tilt</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ts&quot;</span><span class="p">:</span><span class="n">timestamp</span><span class="p">,</span><span class="s2">&quot;node_id&quot;</span><span class="p">:</span> <span class="n">node_id</span><span class="p">,</span><span class="s2">&quot;xval&quot;</span><span class="p">:</span><span class="n">valueX</span><span class="p">,</span><span class="s2">&quot;yval&quot;</span><span class="p">:</span><span class="n">valueY</span><span class="p">,</span><span class="s2">&quot;zval&quot;</span><span class="p">:</span><span class="n">valueZ</span><span class="p">}</span>
+            <span class="n">line_soms</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ts&quot;</span><span class="p">:</span><span class="n">timestamp</span><span class="p">,</span><span class="s2">&quot;node_id&quot;</span><span class="p">:</span> <span class="n">node_id</span><span class="p">,</span><span class="s2">&quot;mval1&quot;</span><span class="p">:</span><span class="n">valueF</span><span class="p">}</span>
+            <span class="n">outl_tilt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line_tilt</span><span class="p">)</span>
+            <span class="n">outl_soms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line_soms</span><span class="p">)</span>
+            
+        <span class="n">df_tilt</span> <span class="o">=</span> <span class="n">smsclass</span><span class="o">.</span><span class="n">DataTable</span><span class="p">(</span><span class="s1">&#39;tilt_&#39;</span><span class="o">+</span><span class="n">tsm_name</span><span class="p">,</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">outl_tilt</span><span class="p">))</span>
+        <span class="n">df_soms</span> <span class="o">=</span> <span class="n">smsclass</span><span class="o">.</span><span class="n">DataTable</span><span class="p">(</span><span class="s1">&#39;soms_&#39;</span><span class="o">+</span><span class="n">tsm_name</span><span class="p">,</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">outl_soms</span><span class="p">))</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">df_tilt</span><span class="p">,</span><span class="n">df_soms</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
+      
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&gt;&gt;Error: Error in Data format&#39;</span>
+        <span class="k">return</span> 
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&gt;&gt;Error: Unknown&#39;</span>
+        <span class="k">raise</span> <span class="ne">KeyboardInterrupt</span>
+        <span class="k">return</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&gt;&gt;Error: Unknown&#39;</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="twos_comp"><a class="viewcode-back" href="../../../gsm.smsparser2.html#gsm.smsparser2.subsurface.twos_comp">[docs]</a><span class="k">def</span> <span class="nf">twos_comp</span><span class="p">(</span><span class="n">hexstr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - Process the convertion of x, y and z data for subsurface version 2 data.</span>
+
+<span class="sd">    :param hexstr: String dat of x, y or z.</span>
+<span class="sd">    :type hexstr: str</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">       int: The converted value of hex str.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">hexstr</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span><span class="o">+</span><span class="n">hexstr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span><span class="mi">16</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hexstr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">sub</span> <span class="o">=</span> <span class="mi">65536</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sub</span> <span class="o">=</span> <span class="mi">4096</span>
+    <span class="k">if</span> <span class="n">num</span> <span class="o">&gt;</span> <span class="mi">2048</span><span class="p">:</span>  
+        <span class="k">return</span> <span class="n">num</span> <span class="o">-</span> <span class="n">sub</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">num</span></div>
+
+<div class="viewcode-block" id="v2"><a class="viewcode-back" href="../../../gsm.smsparser2.html#gsm.smsparser2.subsurface.v2">[docs]</a><span class="k">def</span> <span class="nf">v2</span><span class="p">(</span><span class="n">sms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of parsing version 2 and 3 subsurface data.</span>
+<span class="sd">      </span>
+<span class="sd">    :param sms: Dictionary of sms info.</span>
+<span class="sd">    :type sms: obj</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">       DataFrame: Dataframe output for success parsing and return</span>
+<span class="sd">       False if fails.</span>
+
+<span class="sd">    Example Output::</span>
+<span class="sd">        </span>
+<span class="sd">        BLCTA*x*010BFC3EEFEBF831D0BFF3D9FF2F82*180430163121</span>
+<span class="sd">                             batt  node_id  type_num  xval  yval  zval</span>
+<span class="sd">        ts</span>
+<span class="sd">        2018-04-30 16:31:00  3.31        1        11  1020   -18   -21</span>
+<span class="sd">        2018-04-30 16:31:00  3.30       29        11  1023   -39   -14</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="n">sms</span><span class="o">.</span><span class="n">msg</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; Editing old data format&quot;</span>
+        <span class="n">datafield</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">datafield</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;20&quot;</span> <span class="ow">or</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;0B&quot;</span><span class="p">:</span>
+            <span class="n">dtypestr</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
+        <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;21&quot;</span> <span class="ow">or</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;0C&quot;</span><span class="p">:</span>
+            <span class="n">dtypestr</span> <span class="o">=</span> <span class="s2">&quot;y&quot;</span>
+        <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;6F&quot;</span> <span class="ow">or</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;15&quot;</span><span class="p">:</span>
+            <span class="n">dtypestr</span> <span class="o">=</span> <span class="s2">&quot;b&quot;</span>
+        <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;70&quot;</span> <span class="ow">or</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;1A&quot;</span><span class="p">:</span>
+            <span class="n">dtypestr</span> <span class="o">=</span> <span class="s2">&quot;c&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&gt;&gt; Data type&quot;</span> <span class="o">+</span> <span class="n">dtype</span> <span class="o">+</span> <span class="s2">&quot;not recognized&quot;</span><span class="p">)</span>
+            
+        
+        <span class="n">i</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span> <span class="o">+</span> <span class="n">dtypestr</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span> <span class="o">+</span> <span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="s2">&quot;*&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        
+    <span class="n">outl</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">msgsplit</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+    <span class="n">tsm_name</span> <span class="o">=</span> <span class="n">msgsplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># column id</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">msgsplit</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;wrong data format&#39;</span>
+        <span class="c1"># print msg</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tsm_name</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;wrong master name&#39;</span>
+        <span class="k">return</span>
+
+    <span class="nb">print</span> <span class="n">msg</span>
+
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">msgsplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+   
+    <span class="n">datastr</span> <span class="o">=</span> <span class="n">msgsplit</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">datastr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">136</span><span class="p">:</span>
+        <span class="n">datastr</span> <span class="o">=</span> <span class="n">datastr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">72</span><span class="p">]</span> <span class="o">+</span> <span class="n">datastr</span><span class="p">[</span><span class="mi">73</span><span class="p">:]</span>
+    
+    <span class="n">ts</span> <span class="o">=</span> <span class="n">msgsplit</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+  
+    <span class="k">if</span> <span class="n">datastr</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="n">datastr</span> <span class="o">=</span> <span class="s1">&#39;000000000000000&#39;</span>
+        <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; Error: No parsed data in sms&quot;</span>
+        <span class="k">return</span>
+   
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+       <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Error in time value format: &#39;</span>
+       <span class="k">return</span>
+    
+    <span class="n">ts_patterns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;%y%m</span><span class="si">%d</span><span class="s1">%H%M%S&#39;</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">]</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">ts</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;[^0-9]&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="n">ts</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">ts_patterns</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span><span class="n">pattern</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:00&#39;</span><span class="p">)</span>
+            <span class="k">break</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;Error: wrong timestamp format&quot;</span><span class="p">,</span> <span class="n">ts</span><span class="p">,</span> <span class="s2">&quot;for pattern&quot;</span><span class="p">,</span> <span class="n">pattern</span>
+ 
+    <span class="k">if</span> <span class="n">timestamp</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&gt;&gt; Error: Unrecognized timestamp pattern &quot;</span> <span class="o">+</span> <span class="n">ts</span><span class="p">)</span>
+
+    <span class="c1"># update_sim_num_table(tsm_name,sender,timestamp[:8])</span>
+
+ <span class="c1"># PARTITION the message into n characters</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;Y&#39;</span> <span class="ow">or</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;X&#39;</span><span class="p">:</span>
+       <span class="n">n</span> <span class="o">=</span> <span class="mi">15</span>
+       <span class="c1"># PARTITION the message into n characters</span>
+       <span class="n">sd</span> <span class="o">=</span> <span class="p">[</span><span class="n">datastr</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">datastr</span><span class="p">),</span><span class="n">n</span><span class="p">)]</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span>
+        <span class="c1"># do parsing for datatype &#39;B&#39; (SOMS RAW)</span>
+        <span class="n">outl</span> <span class="o">=</span> <span class="n">soms_parser</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>    
+        <span class="n">name_df</span> <span class="o">=</span> <span class="s1">&#39;soms_&#39;</span><span class="o">+</span><span class="n">tsm_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>   
+        <span class="c1"># for piece in outl:</span>
+        <span class="c1">#     print piece</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
+        <span class="c1"># do parsing for datatype &#39;C&#39; (SOMS CALIB/NORMALIZED)</span>
+        <span class="n">outl</span> <span class="o">=</span> <span class="n">soms_parser</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">name_df</span> <span class="o">=</span> <span class="s1">&#39;soms_&#39;</span><span class="o">+</span><span class="n">tsm_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>  
+        <span class="c1"># for piece in outl:</span>
+        <span class="c1">#     print piece</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Undefined data format &quot;</span> <span class="o">+</span> <span class="n">dtype</span> <span class="p">)</span>
+    
+    <span class="c1"># do parsing for datatype &#39;X&#39; or &#39;Y&#39; (accel data)</span>
+    <span class="k">if</span> <span class="n">dtype</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;X&#39;</span> <span class="ow">or</span> <span class="n">dtype</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span><span class="s1">&#39;Y&#39;</span><span class="p">:</span>
+        <span class="n">outl</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">name_df</span> <span class="o">=</span> <span class="s1">&#39;tilt_&#39;</span><span class="o">+</span><span class="n">tsm_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">piece</span> <span class="ow">in</span> <span class="n">sd</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                    <span class="c1"># print piece</span>
+                <span class="n">ID</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">piece</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span><span class="mi">16</span><span class="p">)</span>
+                <span class="n">msgID</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">piece</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span><span class="mi">16</span><span class="p">)</span>
+                <span class="n">xd</span> <span class="o">=</span> <span class="n">twos_comp</span><span class="p">(</span><span class="n">piece</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">7</span><span class="p">])</span>
+                <span class="n">yd</span> <span class="o">=</span> <span class="n">twos_comp</span><span class="p">(</span><span class="n">piece</span><span class="p">[</span><span class="mi">7</span><span class="p">:</span><span class="mi">10</span><span class="p">])</span>
+                <span class="n">zd</span> <span class="o">=</span> <span class="n">twos_comp</span><span class="p">(</span><span class="n">piece</span><span class="p">[</span><span class="mi">10</span><span class="p">:</span><span class="mi">13</span><span class="p">])</span>
+                <span class="n">bd</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">piece</span><span class="p">[</span><span class="mi">13</span><span class="p">:</span><span class="mi">15</span><span class="p">],</span><span class="mi">16</span><span class="p">)</span><span class="o">+</span><span class="mi">200</span><span class="p">)</span><span class="o">/</span><span class="mf">100.0</span>
+                <span class="c1"># line = [timestamp, ID, msgID, xd, yd, zd, bd]</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ts&quot;</span><span class="p">:</span><span class="n">timestamp</span><span class="p">,</span> <span class="s2">&quot;node_id&quot;</span><span class="p">:</span><span class="n">ID</span><span class="p">,</span> <span class="s2">&quot;type_num&quot;</span><span class="p">:</span><span class="n">msgID</span><span class="p">,</span>
+                <span class="s2">&quot;xval&quot;</span><span class="p">:</span><span class="n">xd</span><span class="p">,</span> <span class="s2">&quot;yval&quot;</span><span class="p">:</span><span class="n">yd</span><span class="p">,</span> <span class="s2">&quot;zval&quot;</span><span class="p">:</span><span class="n">zd</span><span class="p">,</span> <span class="s2">&quot;batt&quot;</span><span class="p">:</span><span class="n">bd</span><span class="p">}</span>
+                <span class="n">outl</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s2">&quot;&gt;&gt; Value Error detected.&quot;</span><span class="p">,</span> <span class="n">piece</span><span class="p">,</span>
+                <span class="nb">print</span> <span class="s2">&quot;Piece of data to be ignored&quot;</span>
+                <span class="k">return</span>
+    
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">outl</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">smsclass</span><span class="o">.</span><span class="n">DataTable</span><span class="p">(</span><span class="n">name_df</span><span class="p">,</span><span class="n">df</span><span class="p">)</span>
+    <span class="k">return</span>  <span class="n">data</span></div>
+       
+<div class="viewcode-block" id="log_errors"><a class="viewcode-back" href="../../../gsm.smsparser2.html#gsm.smsparser2.subsurface.log_errors">[docs]</a><span class="k">def</span> <span class="nf">log_errors</span><span class="p">(</span><span class="n">errortype</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of logging of errors in SOMS MSG ERROR text file..</span>
+
+<span class="sd">    :param errortype: Error type id.</span>
+<span class="sd">    :param line: Message line.</span>
+<span class="sd">    :param dt: Date and time.</span>
+<span class="sd">    :type errortype: int</span>
+<span class="sd">    :type line: str</span>
+<span class="sd">    :type dt: date</span>
+<span class="sd">    &quot;&quot;&quot;</span>  
+    <span class="n">error</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+    <span class="n">writefolder</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+    
+    <span class="n">x</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;wrong identifier&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s1">&#39;wrong node division&#39;</span><span class="p">,</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="s1">&#39;2nd text&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;unidentified error&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="s1">&#39;no datetime&#39;</span><span class="p">,</span>
+        <span class="mi">10</span><span class="p">:</span> <span class="s1">&#39;random character&#39;</span>
+    <span class="p">}</span>
+    
+    <span class="n">error</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">errortype</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&gt;&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span><span class="o">+</span> <span class="s1">&#39;&gt;&#39;</span><span class="o">+</span> <span class="n">line</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="c1">#print(error)</span>
+    <span class="n">text_file</span><span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">writefolder</span><span class="o">+</span><span class="s1">&#39;SOMS MSG ERRORS.txt&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+    <span class="n">text_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="soms_parser"><a class="viewcode-back" href="../../../gsm.smsparser2.html#gsm.smsparser2.subsurface.soms_parser">[docs]</a><span class="k">def</span> <span class="nf">soms_parser</span><span class="p">(</span><span class="n">msgline</span><span class="p">,</span><span class="n">mode</span><span class="p">,</span><span class="n">div</span><span class="p">,</span><span class="n">err</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    - The process of parsing soms data of version 2 and 3.</span>
+
+<span class="sd">    :param msgline: Sms line of message for soms .</span>
+<span class="sd">    :param mode: Mode of the data of soms.</span>
+<span class="sd">    :param div: Soms division of data .</span>
+<span class="sd">    :param err: Error line in the message.</span>
+<span class="sd">    :type msgline: str</span>
+<span class="sd">    :type mode: str</span>
+<span class="sd">    :type div: str</span>
+<span class="sd">    :type err: str</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">       DataFrame: Dataframe output for success parsing and return</span>
+<span class="sd">       False if fails.</span>
+
+<span class="sd">    Example Output::</span>
+<span class="sd">        </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<span class="c1">#    global prevdatetime</span>
+    <span class="k">global</span> <span class="n">backupGID</span>
+    <span class="k">global</span> <span class="n">tempbuff</span>
+    <span class="k">global</span> <span class="n">temprawlist</span>
+    <span class="n">siteptr</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;NAGSAM&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;BAYSBM&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+    <span class="n">rawlist</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">rawdata1</span><span class="o">=</span><span class="mi">0</span>
+    <span class="n">rawdata2</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1">#if raw</span>
+        <span class="sd">&#39;&#39;&#39;use following&#39;&#39;&#39;</span>
+        <span class="n">nodecommands</span> <span class="o">=</span> <span class="p">[</span><span class="mi">110</span><span class="p">,</span> <span class="mi">111</span><span class="p">,</span> <span class="mi">21</span><span class="p">]</span>
+        <span class="n">maxnode</span><span class="o">=</span> <span class="mi">13</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span> <span class="c1">#if calib</span>
+        <span class="sd">&#39;&#39;&#39;use following&#39;&#39;&#39;</span>
+        <span class="n">nodecommands</span> <span class="o">=</span> <span class="p">[</span><span class="mi">112</span><span class="p">,</span> <span class="mi">113</span><span class="p">,</span> <span class="mi">26</span><span class="p">]</span>
+        <span class="n">maxnode</span> <span class="o">=</span> <span class="mi">19</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">nodecommands</span> <span class="o">=</span> <span class="p">[</span><span class="mi">110</span><span class="p">,</span> <span class="mi">111</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="mi">112</span><span class="p">,</span> <span class="mi">113</span><span class="p">,</span> <span class="mi">26</span> <span class="p">]</span>
+        <span class="n">maxnode</span> <span class="o">=</span> <span class="mi">9</span>
+        
+    <span class="n">r</span> <span class="o">=</span> <span class="n">msgline</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+    <span class="n">site</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>    
+    <span class="k">if</span> <span class="n">site</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;NAGSAM&#39;</span><span class="p">,</span> <span class="s1">&#39;BAYSBM&#39;</span><span class="p">]:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">siteptr</span><span class="p">[</span><span class="n">site</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">try</span><span class="p">:</span>      
+        <span class="n">dt</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">12</span><span class="p">],</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;%y%m</span><span class="si">%d</span><span class="s1">%H%M%S&#39;</span><span class="p">)</span> <span class="c1">#uses datetime from end of msg </span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">dt</span><span class="o">=</span><span class="s1">&#39;0000-00-00 00:00:00&#39;</span>
+        <span class="n">log_errors</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rawlist</span>   
+   
+   <span class="c1">#if msgdata is broken (without nodeid at start)   </span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">firsttwo</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s1">&#39;0x&#39;</span><span class="o">+</span><span class="n">data</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span><span class="n">base</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">firsttwo</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">log_errors</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span> 
+        
+    <span class="k">if</span> <span class="n">firsttwo</span> <span class="ow">in</span> <span class="n">nodecommands</span><span class="p">:</span>        <span class="c1"># kapag msgid yung first 2 chars ng msgline</span>
+        <span class="n">log_errors</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="n">long</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">10</span><span class="p">])</span><span class="o">-</span><span class="n">long</span><span class="p">(</span><span class="n">prevdatetime</span><span class="p">[</span><span class="n">a</span><span class="p">])</span><span class="o">&lt;=</span><span class="mi">10</span><span class="p">:</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">backupGID</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="o">+</span><span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="c1">#print &#39;data: &#39; + data</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1">#hanap next line na pareho</span>
+            <span class="n">tempbuff</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">msgline</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="c1">#parsing msgdata</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">/</span><span class="n">div</span><span class="p">)):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">GID</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span><span class="o">+</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">div</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="n">div</span><span class="o">*</span><span class="n">i</span><span class="p">],</span><span class="n">base</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span> <span class="c1">#kapag hindi kaya maging int ng gid</span>
+            <span class="n">log_errors</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">msgline</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>    
+            <span class="n">CMD</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s1">&#39;0x&#39;</span><span class="o">+</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="o">+</span><span class="n">div</span><span class="o">*</span><span class="n">i</span><span class="p">:</span><span class="mi">4</span><span class="o">+</span><span class="n">div</span><span class="o">*</span><span class="n">i</span><span class="p">],</span><span class="n">base</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">log_errors</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">msgline</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="k">continue</span>
+        
+        <span class="k">if</span> <span class="n">CMD</span> <span class="ow">in</span> <span class="n">nodecommands</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">div</span><span class="o">==</span><span class="mi">6</span><span class="p">:</span>
+                <span class="n">rawdata1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>    
+                    <span class="n">rawdata1</span><span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s1">&#39;0x&#39;</span><span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="mi">6</span><span class="o">+</span><span class="n">div</span><span class="o">*</span><span class="n">i</span><span class="p">:</span><span class="mi">7</span><span class="o">+</span><span class="n">div</span><span class="o">*</span><span class="n">i</span><span class="p">]</span> 
+                        <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="o">+</span><span class="n">div</span><span class="o">*</span><span class="n">i</span><span class="p">:</span><span class="mi">6</span><span class="o">+</span><span class="n">div</span><span class="o">*</span><span class="n">i</span><span class="p">],</span> <span class="n">base</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">log_errors</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+                    <span class="n">rawdata1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#print &quot;WRONG DATAMSG:&quot; + msgline +&#39;/n err: &#39;+ str(err)</span>
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> 
+                <span class="k">if</span> <span class="n">err</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># err0: &#39;b&#39; gives calib data</span>
+                    <span class="k">if</span> <span class="n">CMD</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">112</span><span class="p">,</span><span class="mi">113</span><span class="p">,</span><span class="mi">26</span><span class="p">]:</span>
+                        <span class="n">log_errors</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">msgline</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">soms_parser</span><span class="p">(</span><span class="n">msgline</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">log_errors</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">soms_parser</span><span class="p">(</span><span class="n">msgline</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>   <span class="c1">#if CMD cannot be distinguished try 12 chars</span>
+                <span class="k">elif</span> <span class="n">err</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">log_errors</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">soms_parser</span><span class="p">(</span><span class="n">msgline</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>   <span class="c1"># err: if data has 2 extra zeros</span>
+                <span class="k">elif</span> <span class="n">err</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">log_errors</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">rawlist</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">log_errors</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">msgline</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">rawlist</span>
+
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">err</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1">#if c gives raw data</span>
+                    <span class="k">if</span> <span class="n">CMD</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">110</span><span class="p">,</span> <span class="mi">111</span><span class="p">,</span> <span class="mi">21</span><span class="p">]:</span>
+                        <span class="n">log_errors</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">soms_parser</span><span class="p">(</span><span class="n">msgline</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="c1">#if c gives raw data</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">log_errors</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+                        <span class="c1">#print &quot;div=6!&quot;</span>
+                        <span class="k">return</span> <span class="n">soms_parser</span><span class="p">(</span><span class="n">msgline</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>    <span class="c1">#wrong node division</span>
+                <span class="k">elif</span> <span class="n">err</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">log_errors</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">soms_parser</span><span class="p">(</span><span class="n">msgline</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>    <span class="c1">#if CMD cannot be distinguished</span>
+                <span class="k">elif</span> <span class="n">err</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">log_errors</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">rawlist</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">log_errors</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">msgline</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">rawlist</span>
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">rawlist</span>
+
+                
+        <span class="k">if</span> <span class="n">div</span> <span class="o">==</span> <span class="mi">10</span> <span class="ow">or</span> <span class="n">div</span> <span class="o">==</span> <span class="mi">12</span> <span class="ow">or</span> <span class="n">div</span> <span class="o">==</span> <span class="mi">15</span><span class="p">:</span>           <span class="c1">#if raw data</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">rawdata2</span><span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s1">&#39;0x&#39;</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="mi">9</span> <span class="o">+</span> <span class="n">div</span><span class="o">*</span><span class="n">i</span><span class="p">:</span><span class="mi">10</span> <span class="o">+</span> <span class="n">div</span><span class="o">*</span><span class="n">i</span><span class="p">]</span>
+                    <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="mi">7</span><span class="o">+</span> <span class="n">div</span><span class="o">*</span><span class="n">i</span><span class="p">:</span><span class="mi">9</span> <span class="o">+</span> <span class="n">div</span><span class="o">*</span><span class="n">i</span><span class="p">],</span> <span class="n">base</span> <span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">log_errors</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">msgline</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+                <span class="n">rawdata2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="c1"># rawlist.append([site, str(dt), GID, CMD, rawdata1, rawdata2])</span>
+        <span class="n">rawlist</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;ts&quot;</span><span class="p">:</span><span class="nb">str</span><span class="p">(</span><span class="n">dt</span><span class="p">),</span> <span class="s2">&quot;node_id&quot;</span><span class="p">:</span><span class="n">GID</span><span class="p">,</span> <span class="s2">&quot;type_num&quot;</span><span class="p">:</span><span class="n">CMD</span><span class="p">,</span> <span class="s2">&quot;mval1&quot;</span><span class="p">:</span><span class="n">rawdata1</span><span class="p">,</span> <span class="s2">&quot;mval2&quot;</span><span class="p">:</span><span class="n">rawdata2</span><span class="p">})</span>
+  
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">%</span><span class="n">div</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
+
+        <span class="n">prevdatetime</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="o">=</span><span class="n">r</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">10</span><span class="p">]</span>
+        <span class="n">backupGID</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="n">maxnode</span><span class="o">*</span><span class="n">div</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="n">div</span><span class="o">*</span><span class="n">maxnode</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tempbuff</span><span class="p">[</span><span class="n">a</span><span class="p">])</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">temprawlist</span> <span class="o">=</span> <span class="n">rawlist</span>
+            <span class="n">buff</span> <span class="o">=</span> <span class="n">soms_parser</span><span class="p">(</span><span class="n">tempbuff</span><span class="p">[</span><span class="n">a</span><span class="p">],</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+            <span class="c1">#print temprawlist+buff</span>
+            <span class="k">return</span> <span class="n">temprawlist</span><span class="o">+</span><span class="n">buff</span>
+            
+
+    <span class="k">return</span> <span class="n">rawlist</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

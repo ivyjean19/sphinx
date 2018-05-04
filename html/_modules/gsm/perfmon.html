@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gsm.perfmon &mdash; Central Server Documentation 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Central Server Documentation 1.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Central Server Documentation
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dynadb.html">dynadb package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gsm.html">gsm package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../volatile.html">volatile package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Central Server Documentation</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>gsm.perfmon</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gsm.perfmon</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">dynadb.db</span> <span class="k">as</span> <span class="nn">dbio</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">timedelta</span> <span class="k">as</span> <span class="n">td</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">volatile.memory</span> <span class="k">as</span> <span class="nn">mem</span>
+
+<div class="viewcode-block" id="count_items"><a class="viewcode-back" href="../../gsm.html#gsm.perfmon.count_items">[docs]</a><span class="k">def</span> <span class="nf">count_items</span><span class="p">(</span><span class="n">ts_end</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ts_start</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">table</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">stat_col</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+	<span class="n">stat</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pq</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">write_to_db</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">timelag</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> 
+	<span class="n">backtrack</span> <span class="o">=</span> <span class="mi">5000</span><span class="p">,</span> <span class="n">dbinstance</span> <span class="o">=</span> <span class="s1">&#39;local&#39;</span><span class="p">):</span>
+
+	<span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No table given&quot;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;outbox&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">index</span> <span class="o">=</span> <span class="s2">&quot;outbox_id&quot;</span>
+		<span class="k">elif</span> <span class="n">table</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;inbox&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">index</span> <span class="o">=</span> <span class="s2">&quot;inbox_id&quot;</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown table </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">table</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">ts_end</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">ts</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+		<span class="n">ts_end</span> <span class="o">=</span> <span class="n">ts</span> <span class="o">-</span> <span class="n">td</span><span class="p">(</span><span class="n">minutes</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">minute</span> <span class="o">%</span> <span class="n">timelag</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">second</span><span class="p">,</span> 
+			<span class="n">microseconds</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">microsecond</span><span class="p">)</span>
+		
+		<span class="k">if</span> <span class="n">ts_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">ts_start</span> <span class="o">=</span> <span class="n">ts_end</span> <span class="o">-</span> <span class="n">td</span><span class="p">(</span><span class="n">minutes</span> <span class="o">=</span> <span class="n">timelag</span><span class="p">)</span>
+	
+		<span class="n">ts_start</span> <span class="o">=</span> <span class="n">ts_start</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+		<span class="n">ts_end</span> <span class="o">=</span> <span class="n">ts_end</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+
+	<span class="nb">print</span> <span class="s2">&quot;Count </span><span class="si">%s</span><span class="s2"> items from </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">ts_start</span><span class="p">,</span> <span class="n">ts_end</span><span class="p">)</span>
+
+	<span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;select count(</span><span class="si">%s</span><span class="s2">) from </span><span class="si">%s</span><span class="s2"> &quot;</span>
+		<span class="s2">&quot;where </span><span class="si">%s</span><span class="s2"> &gt; (select max(</span><span class="si">%s</span><span class="s2">) - </span><span class="si">%d</span><span class="s2"> from </span><span class="si">%s</span><span class="s2">) &quot;</span>
+		<span class="s2">&quot;and ts_stored &gt;= &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span>
+		<span class="s2">&quot;and ts_stored &lt; &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span> <span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">backtrack</span><span class="p">,</span> 
+		<span class="n">table</span><span class="p">,</span> <span class="n">ts_start</span><span class="p">,</span> <span class="n">ts_end</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">stat_col</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">stat</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No stat for stat_col (</span><span class="si">%s</span><span class="s1">) given&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">stat_col</span><span class="p">))</span>
+		<span class="n">query</span> <span class="o">+=</span> <span class="s2">&quot;and </span><span class="si">%s</span><span class="s2"> like &#39;</span><span class="si">%s%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">stat_col</span><span class="p">,</span><span class="n">stat</span><span class="p">,</span><span class="s1">&#39;%&#39;</span><span class="p">)</span>
+		
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">stat_col</span> <span class="o">=</span> <span class="s1">&#39;undefined&#39;</span>
+		<span class="n">stat</span> <span class="o">=</span> <span class="s2">&quot;undefined&quot;</span>
+
+	<span class="k">if</span> <span class="n">pq</span><span class="p">:</span>
+		<span class="nb">print</span> <span class="s2">&quot;Count query:&quot;</span><span class="p">,</span> <span class="n">query</span>
+
+	<span class="n">mc</span> <span class="o">=</span> <span class="n">mem</span><span class="o">.</span><span class="n">get_handle</span><span class="p">()</span>
+	<span class="n">sc</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;server_config&quot;</span><span class="p">)</span>
+	<span class="n">smsdb_host</span> <span class="o">=</span> <span class="n">sc</span><span class="p">[</span><span class="s1">&#39;resource&#39;</span><span class="p">][</span><span class="s1">&#39;smsdb&#39;</span><span class="p">]</span>
+
+	<span class="n">rs</span> <span class="o">=</span> <span class="n">dbio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="s2">&quot;ci&quot;</span><span class="p">,</span> <span class="n">smsdb_host</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">item_count</span> <span class="o">=</span> <span class="n">rs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+		<span class="nb">print</span> <span class="s2">&quot;Count: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item_count</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+		<span class="nb">print</span> <span class="s2">&quot;Error in resultset conversion. </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">rs</span>
+		<span class="k">return</span> <span class="kc">None</span>
+	<span class="k">except</span> <span class="ne">IndexError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">:</span>
+		<span class="nb">print</span> <span class="s2">&quot;Error: Query error (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">query</span><span class="p">)</span>
+		<span class="k">return</span> <span class="kc">None</span>
+
+	<span class="c1"># return item_count</span>
+
+	<span class="k">if</span> <span class="n">write_to_db</span><span class="p">:</span>
+		<span class="n">table_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;smsinbox_loggers&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;smsoutbox_loggers&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+			<span class="s2">&quot;smsinbox_users&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;smsoutbox_users&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+		<span class="n">stat_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;undefined&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;read&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;unread&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;sent&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> 
+			<span class="s2">&quot;unsent&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;fatal error&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;read-fail&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span> <span class="s2">&quot;read-success&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">}</span>
+		<span class="n">col_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;undefined&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;read_status&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;send_status&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+
+		<span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;insert into item_count_logs (`table`, `ts_end`, `ts_start`, &quot;</span>
+			<span class="s2">&quot;`stat`, `stat_col`, `count`) values (</span><span class="si">%d</span><span class="s2">, &#39;</span><span class="si">%s</span><span class="s2">&#39;, &#39;</span><span class="si">%s</span><span class="s2">&#39;, </span><span class="si">%d</span><span class="s2">, </span><span class="si">%d</span><span class="s2">, &quot;</span>
+			<span class="s2">&quot;</span><span class="si">%d</span><span class="s2">) on duplicate key update `count` = values(`count`)&quot;</span> <span class="o">%</span> <span class="p">(</span> 
+				<span class="n">table_dict</span><span class="p">[</span><span class="n">table</span><span class="p">],</span> <span class="n">ts_end</span><span class="p">,</span> <span class="n">ts_start</span><span class="p">,</span> <span class="n">stat_dict</span><span class="p">[</span><span class="n">stat</span><span class="p">],</span> 
+				<span class="n">col_dict</span><span class="p">[</span><span class="n">stat_col</span><span class="p">],</span> <span class="n">item_count</span><span class="p">))</span>
+
+		<span class="k">if</span> <span class="n">pq</span><span class="p">:</span>
+			<span class="nb">print</span> <span class="s2">&quot;Write query:&quot;</span><span class="p">,</span> <span class="n">query</span>
+
+		<span class="n">dbio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="s1">&#39;item_count&#39;</span><span class="p">,</span> <span class="n">dbinstance</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="get_arguments"><a class="viewcode-back" href="../../gsm.html#gsm.perfmon.get_arguments">[docs]</a><span class="k">def</span> <span class="nf">get_arguments</span><span class="p">():</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Run performance &quot;</span>
+    	<span class="s2">&quot;monitoring routines [-options]&quot;</span><span class="p">))</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="s2">&quot;--table&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;table to count items from&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="s2">&quot;--stat_col&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;column of status&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--stat&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;status of item&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-r&quot;</span><span class="p">,</span> <span class="s2">&quot;--ts_start&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;start time of count&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-e&quot;</span><span class="p">,</span> <span class="s2">&quot;--ts_end&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;end time of count&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="s2">&quot;--instance&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;what machine to write result into&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-w&quot;</span><span class="p">,</span> <span class="s2">&quot;--write_to_db&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;write result to db&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-q&quot;</span><span class="p">,</span> <span class="s2">&quot;--print_query&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;print query&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-l&quot;</span><span class="p">,</span> <span class="s2">&quot;--time_lag&quot;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;time (mins) from ts_end to count items&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">table</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">args</span>        
+
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;&gt;&gt; Error in parsing arguments&#39;</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">format_help</span><span class="p">()</span>
+        <span class="nb">print</span> <span class="n">error</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../gsm.html#gsm.perfmon.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+
+	<span class="n">args</span> <span class="o">=</span> <span class="n">get_arguments</span><span class="p">()</span>
+
+	<span class="n">count_items</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">ts_end</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">ts_start</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">table</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">stat_col</span><span class="p">,</span> 
+		<span class="n">args</span><span class="o">.</span><span class="n">stat</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">print_query</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">write_to_db</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">time_lag</span><span class="p">)</span></div>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
